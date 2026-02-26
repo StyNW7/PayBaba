@@ -42,7 +42,7 @@ export default function Sidebar() {
     { icon: LayoutDashboard, label: 'Dashboard', href: '/merchant/dashboard', active: true },
     { icon: TrendingUp, label: 'Analytics', href: '/dashboard/analytics' },
     { icon: Wallet, label: 'Transactions', href: '/dashboard/transactions' },
-    { icon: CreditCard, label: 'Credit', href: '/dashboard/credit' },
+    { icon: CreditCard, label: 'Credit', href: '/merchant/dashboard/credit' },
     { icon: FileText, label: 'Reports', href: '/dashboard/reports' },
     { icon: Users, label: 'Team', href: '/dashboard/team' },
     { icon: Bell, label: 'Notifications', href: '/dashboard/notifications', badge: 3 },
@@ -81,12 +81,14 @@ export default function Sidebar() {
         {/* Logo Section with Gradient */}
         <div className="p-6 border-b border-[#E5E7EB]/60">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-[#F15A22] to-[#2DAEAA] rounded-xl flex items-center justify-center shadow-lg shadow-[#F15A22]/20">
-              <span className="text-white font-bold text-xl">PB</span>
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center transform group-hover:rotate-12 transition-transform duration-300">
+              <img src='/Images/logo-only.png'/>
             </div>
             <div>
-              <span className="font-bold text-[#1F2937] text-xl block leading-tight">PayBaba</span>
-              <span className="text-[#6B7280] text-xs">Business Dashboard</span>
+                <span className="text-2xl font-bold text-[#2DAEAA] block leading-tight">
+                Pay<span className="text-[#F15A22]">Baba</span>
+                </span>
+                <span className="text-[#6B7280] text-xs">Merchant Dashboard</span>
             </div>
           </div>
         </div>

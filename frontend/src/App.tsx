@@ -24,8 +24,9 @@ import LandingPage from "@/pages/Landing/page";
 import LoginPage from "./pages/Auth/Login";
 import RegisterPage from "./pages/Auth/Register";
 import ForgotPasswordPage from "./pages/Auth/Forgot-Password";
-import DashboardPage from "./pages/Dashboard/page";
+import DashboardPage from "./pages/Merchant-Dashboard/page";
 import DashboardLayout from "./components/dashboard/layout";
+import CreditReadinessPage from "./pages/Merchant-Dashboard/credit-readiness";
 
 function App() {
 
@@ -63,6 +64,7 @@ function App() {
             <Route path="/auth/forgot-password" element={<ForgotPasswordPage/>} />
 
             <Route path="/merchant/dashboard" element={<DashboardLayout children={<DashboardPage/>}/>} />
+            <Route path="/merchant/dashboard/credit" element={<DashboardLayout children={<CreditReadinessPage/>}/>} />
 
           </Routes>
 
