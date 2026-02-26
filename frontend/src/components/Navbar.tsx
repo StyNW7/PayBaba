@@ -68,10 +68,10 @@ const Navbar = () => {
           {/* CTA Button */}
           <div className="hidden lg:block">
             <a
-              href="#get-started"
+              href="/merchant/dashboard"
               className="px-6 py-2.5 bg-[#F15A22] text-white rounded-xl font-semibold hover:bg-[#d94e1e] transition-all duration-300 hover:shadow-lg hover:shadow-[#F15A22]/25"
             >
-              Get Started
+              Dashboard
             </a>
           </div>
 

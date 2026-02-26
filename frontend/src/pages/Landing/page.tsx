@@ -1,5 +1,6 @@
 'use client';
 
+import { useNavigate } from 'react-router';
 import { useEffect, useState, useRef } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -89,8 +90,17 @@ const FloatingCard = ({ children, delay = 0 }: { children: React.ReactNode; dela
 
 export default function Home() {
   
+  const navigate = useNavigate();
   const [activeAccordion, setActiveAccordion] = useState<number | null>(0);
   const [activeTab, setActiveTab] = useState('merchant');
+
+  const handleLoginClick = () => {
+    navigate("/auth/login");
+  };
+
+  const handleDashboardClick = () => {
+    navigate("/merchant/dashboard");
+  };
 
   // useEffect(() => {
   //   setIsVisible(true);
@@ -429,13 +439,13 @@ export default function Home() {
                   </p>
                   
                   <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                    <button className="px-8 py-4 bg-[#F15A22] text-white rounded-xl font-semibold hover:bg-[#d94e1e] transition-all duration-300 hover:shadow-lg hover:shadow-[#F15A22]/25 flex items-center justify-center gap-2 group">
-                      Start Free Trial
+                    <button className="px-8 py-4 bg-[#F15A22] text-white rounded-xl font-semibold hover:bg-[#d94e1e] transition-all duration-300 hover:shadow-lg hover:shadow-[#F15A22]/25 flex items-center justify-center gap-2 group" onClick={handleLoginClick}>
+                      Login
                       <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                     </button>
-                    <button className="px-8 py-4 border-2 border-[#2DAEAA] text-[#2DAEAA] rounded-xl font-semibold hover:bg-[#2DAEAA]/5 transition-all duration-300 flex items-center justify-center gap-2">
+                    <button className="px-8 py-4 border-2 border-[#2DAEAA] text-[#2DAEAA] rounded-xl font-semibold hover:bg-[#2DAEAA]/5 transition-all duration-300 flex items-center justify-center gap-2" onClick={handleDashboardClick}>
                       <Play className="w-5 h-5" />
-                      Watch Demo
+                      Merchant Dashboard
                     </button>
                   </div>
 
@@ -969,11 +979,11 @@ export default function Home() {
                 Join 50,000+ MSMEs who have already accessed fair credit through PayBaba. Get approved in 24 hours.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <button className="px-8 py-4 bg-white text-[#F15A22] rounded-xl font-semibold hover:bg-gray-100 transition-all duration-300 hover:shadow-xl hover:scale-105 flex items-center justify-center gap-2">
-                  Start Free Trial Today
+                <button className="px-8 py-4 bg-white text-[#F15A22] rounded-xl font-semibold hover:bg-gray-100 transition-all duration-300 hover:shadow-xl hover:scale-105 flex items-center justify-center gap-2" onClick={() => navigate("/login")}>
+                  Login
                   <ArrowRight className="w-5 h-5" />
                 </button>
-                <button className="px-8 py-4 border-2 border-white text-white rounded-xl font-semibold hover:bg-white/10 transition-all duration-300 flex items-center justify-center gap-2">
+                <button className="px-8 py-4 border-2 border-white text-white rounded-xl font-semibold hover:bg-white/10 transition-all duration-300 flex items-center justify-center gap-2" onClick={() => navigate("/merchant/dashboard")}>
                   <Play className="w-5 h-5" />
                   Schedule Demo
                 </button>
