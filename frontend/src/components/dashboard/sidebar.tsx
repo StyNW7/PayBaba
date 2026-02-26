@@ -41,7 +41,7 @@ export default function Sidebar() {
   const menuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', href: '/merchant/dashboard', active: true },
     { icon: TrendingUp, label: 'Analytics', href: '/dashboard/analytics' },
-    { icon: Wallet, label: 'Transactions', href: '/dashboard/transactions' },
+    { icon: Wallet, label: 'Transactions', href: '/merchant/dashboard/transactions' },
     { icon: CreditCard, label: 'Credit', href: '/merchant/dashboard/credit' },
     { icon: FileText, label: 'Reports', href: '/dashboard/reports' },
     { icon: Users, label: 'Team', href: '/merchant/dashboard/team' },
