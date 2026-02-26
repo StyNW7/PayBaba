@@ -1,118 +1,85 @@
-import { useState, useEffect } from "react"
-import { motion } from "framer-motion"
-import { Menu } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import ModeToggle from "@/components/theme-toggle"
+'use client';
 
-import { useLocation } from "react-router-dom";
+import { useState } from 'react';
+import { Menu, X } from 'lucide-react';
 
 export default function Navbar() {
+  const [isOpen, setIsOpen] = useState(false);
 
-  const [isOpen, setIsOpen] = useState(false)
-  const [mounted, setMounted] = useState(false)
-  const location = useLocation();
-  const pathname = location.pathname;
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  useEffect(() => {
-    if (isOpen) setIsOpen(false)
-  }, [pathname])
-
-  if (!mounted) return null
+  const navLinks = [
+    { href: '#how-it-works', label: 'How It Works' },
+    { href: '#features', label: 'Features' },
+    { href: '#about', label: 'About' },
+    { href: '#testimonials', label: 'Testimonials' },
+    { href: '#faq', label: 'FAQ' },
+  ];
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center justify-between">
-        <a href="/" className="flex items-center space-x-2">
-          <motion.div
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5 }}
-            className="font-bold text-xl"
-          >
-            NW
-          </motion.div>
-        </a>
+    <nav className="fixed top-0 w-full bg-white/95 backdrop-blur-sm border-b border-gray-200 z-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-20">
+          {/* Logo */}
+          <a href="/" className="flex items-center gap-2">
+            <div className="w-10 h-10 bg-gradient-to-br from-[#F15A22] to-[#2DAEAA] rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-lg">PB</span>
+            </div>
+            <span className="text-xl font-bold text-gray-900">PayBaba</span>
+          </a>
 
-        <nav className="hidden md:flex items-center gap-6">
-          {navItems.map((item, index) => (
-            <motion.div
-              key={item.href}
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1, duration: 0.5 }}
-            >
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center gap-8">
+            {navLinks.map((link) => (
               <a
-                href={item.href}
-                className={`text-sm font-medium transition-colors hover:text-primary ${
-                  pathname === item.href ? "text-foreground" : "text-muted-foreground"
-                }`}
+                key={link.href}
+                href={link.href}
+                className="text-gray-600 hover:text-[#F15A22] transition-colors duration-300 text-sm font-medium"
               >
-                {item.label}
-                {pathname === item.href && (
-                  <motion.div
-                    layoutId="navbar-indicator"
-                    className="h-0.5 bg-primary mt-1"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.3 }}
-                  />
-                )}
+                {link.label}
               </a>
-            </motion.div>
-          ))}
-        </nav>
+            ))}
+          </div>
 
-        <div className="flex items-center gap-2">
-          <ModeToggle />
-          <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setIsOpen(!isOpen)}>
-            <Menu className="h-5 w-5" />
-            <span className="sr-only">Toggle menu</span>
-          </Button>
+          {/* Desktop CTA Button */}
+          <div className="hidden md:flex items-center gap-4">
+            <button className="px-6 py-2.5 bg-[#F15A22] text-white rounded-full font-semibold hover:bg-orange-600 transition-all duration-300 hover:shadow-lg hover:scale-105">
+              Get Started
+            </button>
+          </div>
+
+          {/* Mobile Menu Button */}
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            className="md:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            {isOpen ? (
+              <X className="w-6 h-6 text-gray-900" />
+            ) : (
+              <Menu className="w-6 h-6 text-gray-900" />
+            )}
+          </button>
         </div>
-      </div>
 
-      {/* Mobile menu */}
-      {isOpen && (
-        <motion.div
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: "auto" }}
-          exit={{ opacity: 0, height: 0 }}
-          transition={{ duration: 0.3 }}
-          className="md:hidden border-b"
-        >
-          <div className="container py-4">
-            <nav className="flex flex-col gap-4">
-              {navItems.map((item) => (
+        {/* Mobile Navigation */}
+        {isOpen && (
+          <div className="md:hidden pb-4 border-t border-gray-200 animate-in fade-in slide-in-from-top-2">
+            <div className="flex flex-col gap-3 pt-4">
+              {navLinks.map((link) => (
                 <a
-                  key={item.href}
-                  href={item.href}
-                  className={`text-sm font-medium transition-colors hover:text-primary ${
-                    pathname === item.href ? "text-foreground" : "text-muted-foreground"
-                  }`}
+                  key={link.href}
+                  href={link.href}
+                  className="text-gray-600 hover:text-[#F15A22] px-2 py-2 transition-colors duration-300 text-sm font-medium"
                   onClick={() => setIsOpen(false)}
                 >
-                  {item.label}
+                  {link.label}
                 </a>
               ))}
-            </nav>
+              <button className="w-full px-6 py-2.5 bg-[#F15A22] text-white rounded-full font-semibold hover:bg-orange-600 transition-all duration-300 mt-2">
+                Get Started
+              </button>
+            </div>
           </div>
-        </motion.div>
-      )}
-    </header>
-  )
+        )}
+      </div>
+    </nav>
+  );
 }
-
-const navItems = [
-  {
-    label: "Home",
-    href: "/",
-  },
-  {
-    label: "About",
-    href: "/about",
-  },
-]
