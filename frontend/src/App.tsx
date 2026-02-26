@@ -40,6 +40,9 @@ import BankDashboardLayout from "./pages/Bank-Dashboard/layout";
 import MerchantDetailPage from "./pages/Bank-Dashboard/merchant-detail";
 import EarlyWarningPage from "./pages/Bank-Dashboard/early-warning-system";
 
+import PayBabaDashboardLayout from "./pages/PayBaba-Dashboard/layout";
+import MonetizationDashboardPage from "./pages/PayBaba-Dashboard/monetization";
+
 function App() {
 
   const [loading, setLoading] = useState(true);
@@ -100,6 +103,10 @@ function App() {
             <Route path="/bank/dashboard/merchant/:id" element={<BankDashboardLayout children={<MerchantDetailPage/>}/>} />
 
             <Route path="/bank/dashboard/warning-system" element={<BankDashboardLayout children={<EarlyWarningPage/>}/>} />
+
+            {/* PayBaba Admin Dashboard */}
+
+            <Route path="/paybaba/dashboard" element={<PayBabaDashboardLayout children={<MonetizationDashboardPage/>}/>} />
 
           </Routes>
 
