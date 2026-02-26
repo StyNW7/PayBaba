@@ -36,7 +36,7 @@ const Navbar = () => {
           {/* Logo */}
           <a href="/" className="flex items-center space-x-2 group">
             <div className="w-12 h-12 rounded-xl flex items-center justify-center transform group-hover:rotate-12 transition-transform duration-300">
-              <img src='Images/logo-only.png'/>
+              <img src='/Images/logo-only.png'/>
             </div>
             <span className="text-2xl font-bold text-[#2DAEAA]">
               Pay<span className="text-[#F15A22]">Baba</span>
