@@ -21,7 +21,9 @@ import LoadingScreen from "./pages/Utility/LoadingScreen";
 // Pages
 
 import LandingPage from "@/pages/Landing/page";
-import AboutPage from "./pages/About/page";
+import LoginPage from "./pages/Auth/Login";
+import RegisterPage from "./pages/Auth/Register";
+import ForgotPasswordPage from "./pages/Auth/Forgot-Password";
 
 function App() {
 
@@ -51,11 +53,14 @@ function App() {
             <Route path="/" element={<Layout />}>
               
                 <Route index element={<LandingPage/>} />
-                <Route path="/about" element={<AboutPage/>} />
 
                 <Route path="*" element={<NotFoundPage />} />
 
             </Route>
+
+            <Route path="/auth/login" element={<LoginPage/>} />
+            <Route path="/auth/register" element={<RegisterPage/>} />
+            <Route path="/auth/forgot-password" element={<ForgotPasswordPage/>} />
 
           </Routes>
 

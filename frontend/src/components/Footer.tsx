@@ -78,10 +78,10 @@ const Footer = () => {
           {/* Brand Column */}
           <div className="lg:col-span-1">
             <a href="/" className="flex items-center space-x-2 mb-6 group">
-              <div className="w-10 h-10 bg-[#F15A22] rounded-xl flex items-center justify-center transform group-hover:rotate-12 transition-transform duration-300">
-                <Zap className="w-6 h-6 text-white" />
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center transform group-hover:rotate-12 transition-transform duration-300">
+                <img src='Images/logo-only.png'/>
               </div>
-              <span className="text-2xl font-bold text-gray-900">
+              <span className="text-2xl font-bold text-[#2DAEAA]">
                 Pay<span className="text-[#F15A22]">Baba</span>
               </span>
             </a>
