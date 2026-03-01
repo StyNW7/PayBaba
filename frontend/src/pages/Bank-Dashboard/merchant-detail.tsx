@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
   Download,
@@ -24,7 +25,7 @@ import {
   ChevronRight,
   Zap,
   Building2,
-  Activity
+  Activity,
 } from 'lucide-react';
 
 import {
@@ -38,70 +39,97 @@ import {
 } from 'recharts';
 
 import GaugeChart from '@/components/bank/gauge-chart';
+import { bankApi, type MerchantDetail } from '@/services/api';
+import LoadingSpinner from '@/components/loading-spinner';
+import ErrorState from '@/components/error-state';
 
-// Dummy merchant data
-const merchantData = {
-  id: 1,
-  name: 'Warung Budi',
-  category: 'Food & Beverage',
-  joinedDate: 'Jan 15, 2024',
-  location: 'South Jakarta',
-  phone: '0812-xxxx-xxxx',
-  email: 'warungbudi@email.com',
-  businessType: 'Food & Beverage',
-  status: 'Active',
+// Generate monthly data from score history
+const generateMonthlyData = (scoreHistory: any[]) => {
+  if (!scoreHistory || scoreHistory.length === 0) {
+    // Return dummy data if no history
+    return [
+      { month: 'Jan', amount: 45 },
+      { month: 'Feb', amount: 48 },
+      { month: 'Mar', amount: 52 },
+      { month: 'Apr', amount: 55 },
+      { month: 'May', amount: 58 },
+      { month: 'Jun', amount: 60 },
+      { month: 'Jul', amount: 62 },
+      { month: 'Aug', amount: 65 },
+      { month: 'Sep', amount: 68 },
+      { month: 'Oct', amount: 70 },
+      { month: 'Nov', amount: 72 },
+      { month: 'Dec', amount: 75 }
+    ];
+  }
+
+  // Map score history to monthly data (using revenue as amount)
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  return scoreHistory.slice(0, 12).map((item, index) => ({
+    month: months[index % 12],
+    amount: item.score || Math.floor(Math.random() * 30) + 50 // Fallback
+  }));
+};
+
+// Generate recent transactions from score history (for demo)
+const generateRecentTransactions = () => {
+  const methods = ['QRIS', 'VA', 'Credit Card', 'Bank Transfer'];
+  const statuses = ['Success', 'Success', 'Success', 'Success', 'Pending']; // Mostly success
   
-  // Credit info
-  creditScore: 92,
-  riskBand: 'Low Risk',
-  minLimit: 70,
-  maxLimit: 105,
-  
-  // Transaction data (12 months)
-  monthlyTransactions: [
-    { month: 'Jan', amount: 45 },
-    { month: 'Feb', amount: 48 },
-    { month: 'Mar', amount: 52 },
-    { month: 'Apr', amount: 55 },
-    { month: 'May', amount: 58 },
-    { month: 'Jun', amount: 60 },
-    { month: 'Jul', amount: 62 },
-    { month: 'Aug', amount: 65 },
-    { month: 'Sep', amount: 68 },
-    { month: 'Oct', amount: 70 },
-    { month: 'Nov', amount: 72 },
-    { month: 'Dec', amount: 75 }
-  ],
-  
-  // Early warning
-  earlyWarning: {
-    active: true,
-    detected: 'Feb 25, 2026',
-    type: '15% Revenue Drop in last 2 weeks',
-    analysis: 'Decline may be seasonal. Monitor.',
-  },
-  
-  // Recent transactions
-  recentTransactions: [
-    { date: '25/02/26', amount: 2.5, method: 'QRIS', status: 'Success' },
-    { date: '24/02/26', amount: 1.8, method: 'VA', status: 'Success' },
-    { date: '23/02/26', amount: 3.2, method: 'Credit Card', status: 'Success' },
-    { date: '22/02/26', amount: 1.5, method: 'QRIS', status: 'Pending' },
-    { date: '21/02/26', amount: 2.1, method: 'Bank Transfer', status: 'Success' },
-  ],
-  
-  // Additional stats
-  growthRate: 15,
-  refundRate: 0.3,
-  avgSettlement: 1.2,
-  totalTransactions: 1245,
-  totalRevenue: 750
+  return Array(5).fill(null).map((_, i) => {
+    const date = new Date();
+    date.setDate(date.getDate() - i);
+    
+    return {
+      date: date.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: '2-digit' }),
+      amount: Math.floor(Math.random() * 4) + 1,
+      method: methods[Math.floor(Math.random() * methods.length)],
+      status: statuses[Math.floor(Math.random() * statuses.length)]
+    };
+  });
 };
 
 export default function MerchantDetailPage() {
-    
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [merchantData, setMerchantData] = useState<MerchantDetail | null>(null);
   const [copied, setCopied] = useState(false);
   const [warningResolved, setWarningResolved] = useState(false);
+  const [monthlyData, setMonthlyData] = useState<any[]>([]);
+  const [recentTransactions, setRecentTransactions] = useState<any[]>([]);
+
+  // Fetch merchant detail on mount
+  useEffect(() => {
+    const fetchMerchantDetail = async () => {
+      if (!id) {
+        setError('Merchant ID not found');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        const response = await bankApi.getMerchantDetail(id);
+        
+        if (response.success && response.data) {
+          setMerchantData(response.data);
+          setMonthlyData(generateMonthlyData(response.data.scoreHistory));
+          setRecentTransactions(generateRecentTransactions());
+        } else {
+          setError(response.message || 'Failed to load merchant details');
+        }
+      } catch (err: any) {
+        setError(err.response?.data?.message || 'Failed to load merchant details');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMerchantDetail();
+  }, [id]);
 
   const handleCopyMemo = () => {
     navigator.clipboard.writeText(memoContent);
@@ -138,13 +166,35 @@ export default function MerchantDetailPage() {
     console.log('Warning ignored');
   };
 
-  const formatCurrency = (amount: number) => {
+  const formatCurrency = (amount: number | string) => {
+    const num = typeof amount === 'string' ? parseFloat(amount) : amount;
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(num);
+  };
+
+  const formatCurrencyMillions = (amount: number) => {
     return new Intl.NumberFormat('id-ID', {
       style: 'currency',
       currency: 'IDR',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
     }).format(amount * 1000000);
+  };
+
+  const formatNumber = (num: number) => {
+    return new Intl.NumberFormat('id-ID').format(num);
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
   };
 
   const getStatusColor = (status: string) => {
@@ -156,32 +206,46 @@ export default function MerchantDetailPage() {
     }
   };
 
-  const memoContent = `To: Credit Team, Bank ABC
+  const getRiskBadge = (risk: string) => {
+    switch(risk) {
+      case 'Low':
+        return 'bg-[#10B981]/10 text-[#10B981]';
+      case 'Medium':
+        return 'bg-[#F59E0B]/10 text-[#F59E0B]';
+      case 'High':
+        return 'bg-[#EF4444]/10 text-[#EF4444]';
+      default:
+        return 'bg-[#6B7280]/10 text-[#6B7280]';
+    }
+  };
+
+  // Generate memo content based on actual data
+  const memoContent = merchantData ? `To: Credit Team, Bank ABC
 
 Credit analysis for:
 
-Merchant: Warung Budi
-Industry: Culinary
-Data Period: 1 Year (Feb 2025 - Feb 2026)
+Merchant: ${merchantData.companyName}
+Industry: ${merchantData.businessCategory}
+Data Period: Last 3 Months (${formatDate(merchantData.joinDate)} - Present)
 
 Summary:
-Merchant shows excellent financial performance with
-${merchantData.growthRate}% consistent monthly growth. 
-Refund ratio is very low (${merchantData.refundRate}%)
-and settlement is timely (${merchantData.avgSettlement} days).
+Merchant shows ${merchantData.financialMetrics.revenueGrowth}% revenue growth with 
+${formatNumber(merchantData.financialMetrics.transactions30d)} transactions in last 30 days. 
+Refund rate is ${merchantData.financialMetrics.refundRate}% 
+and settlement averages ${merchantData.financialMetrics.avgSettlementDays} days.
 
-Recommended Limit: Rp ${merchantData.minLimit}-${merchantData.maxLimit} Million
+Recommended Limit: ${formatCurrency(parseFloat(merchantData.loanEligibility.estimatedMinLimit))} - ${formatCurrency(parseFloat(merchantData.loanEligibility.estimatedMaxLimit))}
 
 Regards,
-PayBaba AI System`;
+PayBaba AI System` : '';
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-white p-3 rounded-lg shadow-lg border border-[#E5E7EB]">
-          <p className="text-sm font-medium text-[#1F2937]">{label} 2026</p>
+          <p className="text-sm font-medium text-[#1F2937]">{label}</p>
           <p className="text-sm text-[#F15A22] font-bold">
-            {formatCurrency(payload[0].value)}
+            {formatCurrencyMillions(payload[0].value)}
           </p>
         </div>
       );
@@ -189,27 +253,43 @@ PayBaba AI System`;
     return null;
   };
 
+  if (loading) {
+    return (
+      <div className="p-4 lg:p-8 flex items-center justify-center min-h-screen">
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
+  if (error || !merchantData) {
+    return (
+      <div className="p-4 lg:p-8">
+        <ErrorState message={error || 'Merchant not found'} onRetry={() => window.location.reload()} />
+      </div>
+    );
+  }
+
   return (
     <div className="p-4 lg:p-8 space-y-8">
       {/* Header with Back Button */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <a
-            href="/bank/dashboard"
+          <button
+            onClick={() => navigate('/bank/dashboard')}
             className="flex items-center gap-2 text-[#6B7280] hover:text-[#F15A22] transition-colors"
           >
             <ArrowLeft size={20} />
             <span>Back to Portfolio</span>
-          </a>
+          </button>
           <div className="w-px h-6 bg-[#E5E7EB]"></div>
           <div>
-            <h1 className="text-2xl lg:text-3xl font-bold text-[#1F2937]">{merchantData.name}</h1>
+            <h1 className="text-2xl lg:text-3xl font-bold text-[#1F2937]">{merchantData.companyName}</h1>
             <div className="flex items-center gap-2 mt-1">
               <span className="px-2 py-0.5 bg-[#FFF3ED] text-[#F15A22] text-xs rounded-full">
-                {merchantData.category}
+                {merchantData.businessCategory}
               </span>
               <span className="px-2 py-0.5 bg-[#10B981]/10 text-[#10B981] text-xs rounded-full">
-                Active
+                {merchantData.businessScale}
               </span>
             </div>
           </div>
@@ -220,7 +300,7 @@ PayBaba AI System`;
             <Printer size={18} className="text-[#6B7280]" />
           </button>
           <button className="p-2 border border-[#E5E7EB] rounded-lg hover:border-[#F15A22] transition-colors">
-            <Share2 size={18} className="text-[#6B7280]" />
+            <Share2 size={18} className="text-[#6B7280" />
           </button>
           <button className="p-2 border border-[#E5E7EB] rounded-lg hover:border-[#F15A22] transition-colors">
             <MoreVertical size={18} className="text-[#6B7280]" />
@@ -242,7 +322,7 @@ PayBaba AI System`;
               <Calendar size={16} className="text-[#6B7280] mt-1" />
               <div>
                 <p className="text-xs text-[#6B7280]">Joined</p>
-                <p className="text-sm font-medium text-[#1F2937]">{merchantData.joinedDate}</p>
+                <p className="text-sm font-medium text-[#1F2937]">{formatDate(merchantData.joinDate)}</p>
               </div>
             </div>
             
@@ -250,7 +330,8 @@ PayBaba AI System`;
               <MapPin size={16} className="text-[#6B7280] mt-1" />
               <div>
                 <p className="text-xs text-[#6B7280]">Location</p>
-                <p className="text-sm font-medium text-[#1F2937]">{merchantData.location}</p>
+                <p className="text-sm font-medium text-[#1F2937]">{merchantData.city}</p>
+                <p className="text-xs text-[#6B7280]">{merchantData.address}</p>
               </div>
             </div>
             
@@ -274,7 +355,7 @@ PayBaba AI System`;
               <Briefcase size={16} className="text-[#6B7280] mt-1" />
               <div>
                 <p className="text-xs text-[#6B7280]">Business</p>
-                <p className="text-sm font-medium text-[#1F2937]">{merchantData.businessType}</p>
+                <p className="text-sm font-medium text-[#1F2937]">{merchantData.businessCategory}</p>
               </div>
             </div>
             
@@ -292,16 +373,16 @@ PayBaba AI System`;
           {/* Quick Stats */}
           <div className="grid grid-cols-3 gap-3 mt-6 pt-4 border-t border-[#E5E7EB]">
             <div>
-              <p className="text-xs text-[#6B7280]">Total Transactions</p>
-              <p className="text-lg font-bold text-[#1F2937]">{merchantData.totalTransactions}</p>
+              <p className="text-xs text-[#6B7280]">30-Day Transactions</p>
+              <p className="text-lg font-bold text-[#1F2937]">{formatNumber(merchantData.financialMetrics.transactions30d)}</p>
             </div>
             <div>
-              <p className="text-xs text-[#6B7280]">Total Revenue</p>
-              <p className="text-lg font-bold text-[#1F2937]">{formatCurrency(merchantData.totalRevenue)}</p>
+              <p className="text-xs text-[#6B7280]">30-Day Revenue</p>
+              <p className="text-lg font-bold text-[#1F2937]">{formatCurrency(merchantData.financialMetrics.revenue30d)}</p>
             </div>
             <div>
               <p className="text-xs text-[#6B7280]">Avg Settlement</p>
-              <p className="text-lg font-bold text-[#1F2937]">{merchantData.avgSettlement} days</p>
+              <p className="text-lg font-bold text-[#1F2937]">{merchantData.financialMetrics.avgSettlementDays} days</p>
             </div>
           </div>
         </div>
@@ -320,7 +401,7 @@ PayBaba AI System`;
             </div>
 
             <div className="text-center mb-4">
-              <span className="inline-block px-3 py-1 bg-[#10B981]/10 text-[#10B981] rounded-full text-sm font-medium mb-2">
+              <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium mb-2 ${getRiskBadge(merchantData.riskBand)}`}>
                 {merchantData.riskBand}
               </span>
               <p className="text-2xl font-bold text-[#1F2937]">{merchantData.creditScore}/100</p>
@@ -329,7 +410,7 @@ PayBaba AI System`;
             <div className="w-full p-3 bg-[#F9FAFB] rounded-lg mb-4">
               <p className="text-xs text-[#6B7280] mb-1">Estimated Credit Limit</p>
               <p className="text-lg font-bold text-[#F15A22]">
-                Rp {merchantData.minLimit}-{merchantData.maxLimit} Million
+                {formatCurrency(parseFloat(merchantData.loanEligibility.estimatedMinLimit))} - {formatCurrency(parseFloat(merchantData.loanEligibility.estimatedMaxLimit))}
               </p>
             </div>
 
@@ -397,18 +478,18 @@ PayBaba AI System`;
       <div className="bg-white rounded-2xl border border-[#E5E7EB] p-6 shadow-lg">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h2 className="text-lg font-semibold text-[#1F2937]">12-Month Transaction History</h2>
+            <h2 className="text-lg font-semibold text-[#1F2937]">Transaction History</h2>
             <p className="text-sm text-[#6B7280] mt-1">Monthly revenue trend</p>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-xs text-[#10B981] bg-[#10B981]/10 px-2 py-1 rounded-full">
-              +{merchantData.growthRate}% growth
+              +{merchantData.financialMetrics.revenueGrowth}% growth
             </span>
           </div>
         </div>
 
         <ResponsiveContainer width="100%" height={350}>
-          <AreaChart data={merchantData.monthlyTransactions} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+          <AreaChart data={monthlyData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
             <defs>
               <linearGradient id="colorAmount" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#F15A22" stopOpacity={0.3}/>
@@ -433,7 +514,7 @@ PayBaba AI System`;
       </div>
 
       {/* Section 4: Early Warning (if active) */}
-      {merchantData.earlyWarning.active && !warningResolved && (
+      {merchantData.riskFlags && merchantData.riskFlags.length > 0 && !warningResolved && (
         <div className="bg-gradient-to-r from-[#EF4444] to-[#F97316] rounded-2xl p-6 text-white shadow-xl animate-pulse-slow">
           <div className="flex flex-col lg:flex-row items-start justify-between gap-4">
             <div className="flex items-start gap-3">
@@ -444,11 +525,11 @@ PayBaba AI System`;
                 <div className="flex items-center gap-2 mb-2">
                   <h3 className="font-bold text-lg">⚠️ EARLY WARNING DETECTED</h3>
                   <span className="px-2 py-0.5 bg-white/20 rounded-full text-xs">
-                    {merchantData.earlyWarning.detected}
+                    {formatDate(new Date().toISOString())}
                   </span>
                 </div>
-                <p className="text-white/90 mb-2">{merchantData.earlyWarning.type}</p>
-                <p className="text-white/80 text-sm">{merchantData.earlyWarning.analysis}</p>
+                <p className="text-white/90 mb-2">{merchantData.riskFlags[0] || 'Risk flag detected'}</p>
+                <p className="text-white/80 text-sm">Review merchant activity and take appropriate action.</p>
               </div>
             </div>
             
@@ -486,10 +567,10 @@ PayBaba AI System`;
               </tr>
             </thead>
             <tbody>
-              {merchantData.recentTransactions.map((tx, idx) => (
+              {recentTransactions.map((tx, idx) => (
                 <tr key={idx} className="border-b border-[#E5E7EB] hover:bg-[#F9FAFB] transition-colors">
                   <td className="py-3 px-4 text-sm text-[#4B5563]">{tx.date}</td>
-                  <td className="py-3 px-4 font-medium text-[#1F2937]">{formatCurrency(tx.amount)}</td>
+                  <td className="py-3 px-4 font-medium text-[#1F2937]">{formatCurrencyMillions(tx.amount)}</td>
                   <td className="py-3 px-4 text-sm text-[#4B5563]">{tx.method}</td>
                   <td className="py-3 px-4">
                     <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(tx.status)}`}>
@@ -544,9 +625,14 @@ PayBaba AI System`;
             
             <button
               onClick={handleApprove}
-              className="px-8 py-2.5 bg-gradient-to-r from-[#10B981] to-[#059669] text-white rounded-xl font-medium hover:shadow-lg hover:scale-105 transition-all"
+              disabled={!merchantData.loanEligibility.isEligible}
+              className={`px-8 py-2.5 rounded-xl font-medium transition-all ${
+                merchantData.loanEligibility.isEligible
+                  ? 'bg-gradient-to-r from-[#10B981] to-[#059669] text-white hover:shadow-lg hover:scale-105'
+                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              }`}
             >
-              APPROVE LOAN
+              {merchantData.loanEligibility.isEligible ? 'APPROVE LOAN' : 'NOT ELIGIBLE'}
             </button>
           </div>
         </div>

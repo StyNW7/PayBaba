@@ -5,7 +5,6 @@ import {
   Menu, 
   X, 
   LayoutDashboard, 
-  TrendingUp, 
   Wallet, 
   LogOut, 
   HelpCircle,
@@ -46,7 +45,7 @@ export default function Sidebar() {
 
   const menuItems = [
     { icon: LayoutDashboard, label: 'Portfolio', href: '/bank/dashboard', active: true },
-    { icon: TrendingUp, label: 'Merchant Detail', href: '/bank/dashboard/merchant/:id' },
+    // { icon: TrendingUp, label: 'Merchant Detail', href: '/bank/dashboard/merchant/:id' },
     { icon: FileText, label: 'Limit Simulator', href: '/bank/dashboard/simulation' },
     { icon: Wallet, label: 'Early Warning System', href: '/bank/dashboard/warning-system' },
   ];

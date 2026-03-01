@@ -25,8 +25,11 @@ import { PieChart as RePieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip
 import { bankApi, type BankMerchant, type MerchantDetail } from '@/services/api';
 import LoadingSpinner from '@/components/loading-spinner';
 import ErrorState from '@/components/error-state';
+import { useNavigate } from 'react-router';
 
 export default function BankDashboardPage() {
+
+  const navigate = useNavigate();
   const [merchants, setMerchants] = useState<BankMerchant[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -52,22 +55,25 @@ export default function BankDashboardPage() {
       
       if (response.success && response.data) {
         // Map API merchants to our interface
-        const mappedMerchants = response.data.merchants.map(m => ({
-          ...m,
-          // Generate a unique ID for frontend use (since we need numeric ID for table)
-          id: String(parseInt(m.merchantId.replace(/\D/g, '').slice(-6)) || Math.floor(Math.random() * 10000)),
-          name: m.companyName,
-          location: m.city,
-          category: m.businessCategory,
-          risk: m.riskBand as 'Low' | 'Medium' | 'High',
-          creditScore: m.creditScore,
-          monthlyRevenue: m.monthlyRevenue / 1000000, // Convert to millions
-          // Generate status based on credit score (for demo purposes)
-          status: m.creditScore >= 70 ? 'Ready' : m.creditScore >= 50 ? 'In Process' : 'Approved',
-          avatar: m.companyName.substring(0, 2).toUpperCase(),
-          joinDate: new Date().toISOString().split('T')[0],
-          lastActive: 'Today'
-        }));
+        const mappedMerchants = response.data.merchants.map(m => {
+          const creditScoreNum = typeof m.creditScore === 'number' ? m.creditScore : parseInt(m.creditScore) || 0;
+          return {
+            ...m,
+            // Generate a unique ID for frontend use (since we need numeric ID for table)
+            id: String(parseInt(m.merchantId.replace(/\D/g, '').slice(-6)) || Math.floor(Math.random() * 10000)),
+            name: m.companyName,
+            location: m.city,
+            category: m.businessCategory,
+            risk: m.riskBand as 'Low' | 'Medium' | 'High',
+            score: creditScoreNum,
+            monthlyRevenue: m.monthlyRevenue / 1000000, // Convert to millions
+            // Generate status based on credit score (for demo purposes)
+            status: creditScoreNum >= 70 ? 'Ready' : creditScoreNum >= 50 ? 'In Process' : 'Approved',
+            avatar: m.companyName.substring(0, 2).toUpperCase(),
+            joinDate: new Date().toISOString().split('T')[0],
+            lastActive: 'Today'
+          };
+        });
         
         setMerchants(mappedMerchants);
         setTotalCount(response.data.count);
@@ -149,9 +155,9 @@ export default function BankDashboardPage() {
   const filteredMerchants = useMemo(() => {
     return merchants.filter(merchant => {
       const matchesSearch = 
-        merchant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        merchant.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        merchant.location.toLowerCase().includes(searchTerm.toLowerCase());
+        (merchant.name?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false) ||
+        (merchant.category?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false) ||
+        (merchant.location?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false);
       
       const matchesRisk = riskFilter === 'All' || merchant.risk === riskFilter;
       const matchesStatus = statusFilter === 'All' || merchant.status === statusFilter;
@@ -652,7 +658,7 @@ export default function BankDashboardPage() {
             <tbody>
               {currentItems.length > 0 ? (
                 currentItems.map((merchant, index) => {
-                  const statusStyle = getStatusBadge(merchant.status);
+                  const statusStyle = getStatusBadge(merchant.status || '');
                   const StatusIcon = statusStyle.icon;
                   
                   return (
@@ -697,7 +703,7 @@ export default function BankDashboardPage() {
                         </div>
                       </td>
                       <td className="py-3 px-4">
-                        <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getRiskBadge(merchant.risk)}`}>
+                        <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getRiskBadge(merchant.risk || 'Low')}`}>
                           {merchant.risk}
                         </span>
                       </td>
@@ -897,7 +903,7 @@ export default function BankDashboardPage() {
                 <button className="px-4 py-2 border border-[#E5E7EB] rounded-lg hover:bg-[#F3F4F6] transition-colors">
                   Message
                 </button>
-                <button className="px-4 py-2 bg-gradient-to-r from-[#F15A22] to-[#2DAEAA] text-white rounded-lg hover:shadow-lg transition-all">
+                <button className="px-4 py-2 bg-gradient-to-r from-[#F15A22] to-[#2DAEAA] text-white rounded-lg hover:shadow-lg transition-all" onClick={() => navigate(`/bank/dashboard/merchant/${selectedMerchant.merchantId}`)}>
                   View Full Profile
                 </button>
               </div>

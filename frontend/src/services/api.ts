@@ -383,7 +383,7 @@ export interface LoanTimingData {
 // Add these interfaces to your existing types
 
 export interface BankMerchant {
-  [x: string]: string;
+  // Original API fields
   merchantId: string;
   companyName: string;
   city: string;
@@ -392,6 +392,17 @@ export interface BankMerchant {
   creditScore: number;
   riskBand: 'Low' | 'Medium' | 'High';
   monthlyRevenue: number;
+  
+  id?: string | number;
+  name?: string;       
+  location?: string;   
+  category?: string;   
+  risk?: string;       
+  score?: number;      
+  status?: string;     
+  avatar?: string;     
+  joinDate?: string;   
+  lastActive?: string; 
 }
 
 export interface BankMerchantsResponse {
