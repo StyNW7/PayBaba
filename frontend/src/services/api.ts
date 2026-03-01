@@ -151,4 +151,75 @@ export const authApi = {
   },
 };
 
+
+
+
+// Add these interfaces and functions to your existing api.ts
+
+export interface MerchantProfile {
+  user: {
+    id: string;
+    email: string;
+    fullName: string;
+    companyName: string;
+    phoneNumber: string;
+    city: string;
+    address: string;
+  };
+  merchant: {
+    merchantId: string;
+    businessCategory: string;
+    businessScale: string;
+    joinDate: string;
+  };
+}
+
+export interface DashboardData {
+  merchantId: string;
+  companyName: string;
+  currentCreditScore: number;
+  riskBand: string;
+  estimatedMinLimit: string;
+  estimatedMaxLimit: string;
+  monthlyTransactionVolume: number;
+  monthlyGrowth: number;
+  refundRate: number;
+  totalTransactions: number;
+  avgDailyTransaction: number;
+  scoreHistory: Array<{
+    date: string;
+    score: number;
+  }>;
+}
+
+export interface ProductInsights {
+  performance_summary: string;
+  top_trending_products: Array<{
+    name: string;
+    reason: string;
+  }>;
+  inventory_advice: string;
+  growth_opportunity: string;
+}
+
+// Add to your authApi object
+export const merchantApi = {
+  getProfile: async (): Promise<ApiResponse<MerchantProfile>> => {
+    const response = await api.get<ApiResponse<MerchantProfile>>('/merchant/profile');
+    return response.data;
+  },
+  
+  getDashboard: async (): Promise<ApiResponse<DashboardData>> => {
+    const response = await api.get<ApiResponse<DashboardData>>('/merchant/dashboard');
+    return response.data;
+  },
+  
+  getProductInsights: async (): Promise<ApiResponse<ProductInsights>> => {
+    const response = await api.get<ApiResponse<ProductInsights>>('/merchant/product-insights');
+    return response.data;
+  },
+};
+
+
+
 export default api;

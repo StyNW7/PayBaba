@@ -1,36 +1,61 @@
-import { TrendingUp, AlertCircle, CheckCircle, Clock, Target, Zap } from 'lucide-react';
+import { TrendingUp, AlertCircle, CheckCircle, Clock, Target, Zap, ArrowUpRight } from 'lucide-react';
 
-export default function AIInsights() {
+interface AIInsightsProps {
+  monthlyGrowth: number;
+  refundRate: number;
+  creditScore: number;
+  estimatedLimit: string;
+}
+
+export default function AIInsights({ monthlyGrowth, refundRate, creditScore, estimatedLimit }: AIInsightsProps) {
+  const formatCurrency = (value: string) => {
+    const num = parseFloat(value);
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(num);
+  };
+
   const insights = [
     {
       icon: TrendingUp,
-      title: 'Strong Growth Momentum',
-      description: 'Transaction volume increased by 23% this month. Consider expanding inventory.',
-      type: 'positive',
+      title: 'Growth Momentum',
+      description: monthlyGrowth > 0 
+        ? `Transaction volume increased by ${monthlyGrowth.toFixed(1)}% this month. Consider expanding inventory.`
+        : `Transaction volume decreased by ${Math.abs(monthlyGrowth).toFixed(1)}% this month. Review recent activities.`,
+      type: monthlyGrowth > 5 ? 'positive' : monthlyGrowth > 0 ? 'neutral' : 'warning',
       action: 'View details',
       time: '2 min ago'
     },
     {
       icon: AlertCircle,
       title: 'Refund Rate Alert',
-      description: 'Refund rate at 4.2% exceeds threshold. Review recent transactions.',
-      type: 'warning',
-      action: 'Review now',
+      description: refundRate > 3 
+        ? `Refund rate at ${refundRate.toFixed(1)}% exceeds threshold. Review recent transactions.`
+        : `Refund rate at ${refundRate.toFixed(1)}% within acceptable range.`,
+      type: refundRate > 3 ? 'warning' : 'positive',
+      action: refundRate > 3 ? 'Review now' : 'View report',
       time: '15 min ago'
     },
     {
       icon: Target,
       title: 'Credit Limit Opportunity',
-      description: 'Eligible for limit increase to ₹7.5L based on payment history.',
+      description: `Eligible for limit increase to ${formatCurrency(estimatedLimit)} based on payment history.`,
       type: 'neutral',
       action: 'Apply now',
       time: '1 hour ago'
     },
     {
       icon: CheckCircle,
-      title: 'Payment Success Rate',
-      description: '98.5% success rate. Top performer in your industry.',
-      type: 'positive',
+      title: 'Credit Score Status',
+      description: creditScore > 70 
+        ? `Credit score at ${creditScore}. Excellent performance in your industry.`
+        : creditScore > 50 
+          ? `Credit score at ${creditScore}. Room for improvement.`
+          : `Credit score at ${creditScore}. Needs attention.`,
+      type: creditScore > 70 ? 'positive' : creditScore > 50 ? 'neutral' : 'warning',
       action: 'View report',
       time: '3 hours ago'
     }
@@ -69,7 +94,7 @@ export default function AIInsights() {
                   'text-[#3B82F6]'
                 }`}>
                   {insight.action}
-                  <Zap size={10} />
+                  {insight.type === 'positive' ? <ArrowUpRight size={10} /> : <Zap size={10} />}
                 </button>
               </div>
             </div>

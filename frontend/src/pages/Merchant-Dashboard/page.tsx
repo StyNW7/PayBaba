@@ -1,8 +1,13 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
+import { useState, useEffect } from 'react';
 import StatCard from '@/components/dashboard/stat-card';
 import CreditScoreChart from '@/components/dashboard/credit-score-chart';
 import AIInsights from '@/components/dashboard/ai-insights';
+import ProductInsights from '@/components/dashboard/product-insights';
+import LoadingSpinner from '@/components/loading-spinner';
+import ErrorState from '@/components/error-state';
 import { 
   CreditCard, 
   Shield, 
@@ -16,10 +21,117 @@ import {
   ChevronRight,
   Activity,
   BarChart3,
-  Target
+  Building2,
+  Phone,
+  MapPin,
+  Package,
+  Sparkles
 } from 'lucide-react';
+import { merchantApi, type DashboardData, type MerchantProfile, type ProductInsights as ProductInsightsType } from '@/services/api';
 
 export default function DashboardPage() {
+  
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [profileData, setProfileData] = useState<MerchantProfile | null>(null);
+  const [productInsights, setProductInsights] = useState<ProductInsightsType | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [selectedPeriod, setSelectedPeriod] = useState('30days');
+
+  const fetchDashboardData = async () => {
+    try {
+      setError(null);
+      const [dashboardRes, profileRes, insightsRes] = await Promise.all([
+        merchantApi.getDashboard(),
+        merchantApi.getProfile(),
+        merchantApi.getProductInsights()
+      ]);
+
+      if (dashboardRes.success) {
+        setDashboardData(dashboardRes.data);
+      }
+      if (profileRes.success) {
+        setProfileData(profileRes.data);
+      }
+      if (insightsRes.success) {
+        setProductInsights(insightsRes.data);
+      }
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to load dashboard data');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const handleRefresh = () => {
+    setRefreshing(true);
+    fetchDashboardData();
+  };
+
+  const formatCurrency = (value: string | number) => {
+    const num = typeof value === 'string' ? parseFloat(value) : value;
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(num);
+  };
+
+  const formatNumber = (value: number) => {
+    return new Intl.NumberFormat('id-ID').format(value);
+  };
+
+  // const getRiskBandColor = (band: string) => {
+  //   switch (band?.toLowerCase()) {
+  //     case 'low':
+  //       return 'text-green-600 bg-green-100';
+  //     case 'medium':
+  //       return 'text-yellow-600 bg-yellow-100';
+  //     case 'high':
+  //       return 'text-red-600 bg-red-100';
+  //     default:
+  //       return 'text-gray-600 bg-gray-100';
+  //   }
+  // };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('id-ID', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
+  if (loading) {
+    return (
+      <div className="p-4 lg:p-8 flex items-center justify-center min-h-screen">
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-4 lg:p-8">
+        <ErrorState message={error} onRetry={fetchDashboardData} />
+      </div>
+    );
+  }
+
+  if (!dashboardData || !profileData) {
+    return (
+      <div className="p-4 lg:p-8">
+        <ErrorState message="No data available" onRetry={fetchDashboardData} />
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 lg:p-8 space-y-8">
@@ -39,11 +151,22 @@ export default function DashboardPage() {
         
         {/* Date Selector */}
         <div className="flex items-center gap-3 bg-white rounded-xl border border-[#E5E7EB] p-2 shadow-sm">
-          <button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#F3F4F6] text-[#1F2937] font-medium">
-            <Calendar size={18} className="text-[#F15A22]" />
+          <button 
+            onClick={() => setSelectedPeriod('30days')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
+              selectedPeriod === '30days' 
+                ? 'bg-[#F3F4F6] text-[#1F2937] font-medium' 
+                : 'text-[#6B7280] hover:bg-[#F3F4F6]'
+            }`}
+          >
+            <Calendar size={18} className={selectedPeriod === '30days' ? 'text-[#F15A22]' : 'text-[#6B7280]'} />
             Last 30 days
           </button>
-          <button className="p-2 rounded-lg hover:bg-[#F3F4F6] transition-colors">
+          <button 
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className={`p-2 rounded-lg hover:bg-[#F3F4F6] transition-colors ${refreshing ? 'animate-spin' : ''}`}
+          >
             <RefreshCw size={18} className="text-[#6B7280]" />
           </button>
           <button className="p-2 rounded-lg hover:bg-[#F3F4F6] transition-colors">
@@ -52,52 +175,65 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Welcome Section - Enhanced */}
+      {/* Welcome Section with Real Profile Data */}
       <div className="relative overflow-hidden bg-gradient-to-r from-[#F15A22] via-[#F15A22]/90 to-[#2DAEAA] rounded-2xl p-8 lg:p-10 text-white shadow-2xl">
         {/* Decorative Elements */}
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-32 translate-x-32"></div>
         <div className="absolute bottom-0 left-0 w-48 h-48 bg-black/10 rounded-full translate-y-24 -translate-x-24"></div>
         
-        <div className="relative max-w-3xl">
+        <div className="relative">
           <div className="flex items-center gap-2 mb-4">
+            <div className="px-3 py-1 bg-white/20 rounded-full text-sm font-medium backdrop-blur-sm flex items-center gap-1">
+              <Sparkles size={14} />
+              Welcome back!
+            </div>
             <div className="px-3 py-1 bg-white/20 rounded-full text-sm font-medium backdrop-blur-sm">
-              🎉 Welcome back!
+              Member since {formatDate(profileData.merchant.joinDate)}
             </div>
           </div>
-          <h2 className="text-3xl lg:text-4xl font-bold mb-4">Acme Industries</h2>
-          <p className="text-white/90 text-lg mb-6 leading-relaxed">
-            Your business is performing exceptionally well! 🚀 Credit score improved by <span className="font-bold">25 points</span> in the last 3 months, placing you in the top 15% of businesses.
+          
+          <h2 className="text-3xl lg:text-4xl font-bold mb-4">{profileData.user.companyName}</h2>
+          <p className="text-white/90 text-lg mb-6 leading-relaxed max-w-3xl">
+            Your business is performing well! Credit score is at <span className="font-bold">{dashboardData.currentCreditScore}</span> with {dashboardData.riskBand} risk band. 
+            {dashboardData.monthlyGrowth > 0 
+              ? ` Monthly growth is up by ${dashboardData.monthlyGrowth.toFixed(1)}%.` 
+              : ' Keep up the good work!'}
           </p>
           
           {/* Quick Stats in Welcome Section */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             <div className="bg-white/10 rounded-xl p-4 backdrop-blur-sm">
-              <p className="text-white/70 text-sm">Active Days</p>
-              <p className="text-2xl font-bold">127</p>
+              <p className="text-white/70 text-sm">Business Category</p>
+              <p className="text-xl font-bold">{profileData.merchant.businessCategory || 'N/A'}</p>
             </div>
             <div className="bg-white/10 rounded-xl p-4 backdrop-blur-sm">
-              <p className="text-white/70 text-sm">Success Rate</p>
-              <p className="text-2xl font-bold">98.5%</p>
+              <p className="text-white/70 text-sm">Business Scale</p>
+              <p className="text-xl font-bold">{profileData.merchant.businessScale || 'N/A'}</p>
             </div>
             <div className="bg-white/10 rounded-xl p-4 backdrop-blur-sm">
-              <p className="text-white/70 text-sm">Customers</p>
-              <p className="text-2xl font-bold">1,284</p>
+              <p className="text-white/70 text-sm">Total Transactions</p>
+              <p className="text-xl font-bold">{formatNumber(dashboardData.totalTransactions)}</p>
             </div>
             <div className="bg-white/10 rounded-xl p-4 backdrop-blur-sm">
-              <p className="text-white/70 text-sm">Cash Flow</p>
-              <p className="text-2xl font-bold">+₹2.4M</p>
+              <p className="text-white/70 text-sm">Monthly Volume</p>
+              <p className="text-xl font-bold">{formatCurrency(dashboardData.monthlyTransactionVolume)}</p>
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-4">
-            <button className="group bg-white text-[#F15A22] px-8 py-3 rounded-xl font-semibold hover:shadow-xl hover:scale-105 transition-all duration-300 flex items-center gap-2">
-              View Full Report
-              <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform" />
-            </button>
-            <button className="group border-2 border-white text-white px-8 py-3 rounded-xl font-semibold hover:bg-white/20 transition-all duration-300 flex items-center gap-2 backdrop-blur-sm">
-              Apply for Credit
-              <Target size={18} />
-            </button>
+          {/* Contact Info */}
+          <div className="flex flex-wrap gap-4 text-white/80 text-sm">
+            <div className="flex items-center gap-1">
+              <Building2 size={16} />
+              <span>{profileData.user.fullName}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Phone size={16} />
+              <span>{profileData.user.phoneNumber}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <MapPin size={16} />
+              <span>{profileData.user.city}, {profileData.user.address}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -108,30 +244,30 @@ export default function DashboardPage() {
           <StatCard
             icon={<CreditCard size={28} />}
             label="Credit Score"
-            value="680"
-            change="↑ 25 points (Excellent)"
+            value={dashboardData.currentCreditScore.toString()}
+            change={`↑ ${dashboardData.currentCreditScore - 650} points`}
             trend="up"
             color="orange"
-            subtext="Very Good"
+            subtext={dashboardData.riskBand}
           />
         </div>
         <div className="animate-slideUp" style={{ animationDelay: '0.2s' }}>
           <StatCard
             icon={<Shield size={28} />}
             label="Risk Band"
-            value="Low Risk"
-            change="A+ Rating"
-            trend="neutral"
-            color="teal"
-            subtext="Top 15%"
+            value={dashboardData.riskBand}
+            change={`${dashboardData.riskBand} Risk`}
+            trend={dashboardData.riskBand.toLowerCase() === 'low' ? 'up' : dashboardData.riskBand.toLowerCase() === 'high' ? 'down' : 'neutral'}
+            color={dashboardData.riskBand.toLowerCase() === 'low' ? 'teal' : dashboardData.riskBand.toLowerCase() === 'medium' ? 'orange' : 'blue'}
+            subtext="Based on transaction history"
           />
         </div>
         <div className="animate-slideUp" style={{ animationDelay: '0.3s' }}>
           <StatCard
             icon={<TrendingUp size={28} />}
             label="Est. Credit Limit"
-            value="₹5.2L"
-            change="↑ 15% from last month"
+            value={formatCurrency(dashboardData.estimatedMaxLimit)}
+            change={`Range: ${formatCurrency(dashboardData.estimatedMinLimit)} - ${formatCurrency(dashboardData.estimatedMaxLimit)}`}
             trend="up"
             color="orange"
             subtext="Eligible for increase"
@@ -141,45 +277,52 @@ export default function DashboardPage() {
 
       {/* Credit Score Chart */}
       <div className="animate-fadeIn" style={{ animationDelay: '0.4s' }}>
-        <CreditScoreChart />
+        <CreditScoreChart data={dashboardData.scoreHistory} />
       </div>
 
-      {/* Middle Stats and Insights */}
+      {/* Product Insights Section - New */}
+      {productInsights && (
+        <div className="animate-fadeIn" style={{ animationDelay: '0.5s' }}>
+          <ProductInsights data={productInsights} />
+        </div>
+      )}
+
+      {/* Middle Stats and AI Insights */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Stats Cards - Left Side */}
         <div className="lg:col-span-2 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="animate-slideUp" style={{ animationDelay: '0.5s' }}>
+            <div className="animate-slideUp" style={{ animationDelay: '0.6s' }}>
               <StatCard
                 icon={<DollarSign size={28} />}
                 label="Monthly Transactions"
-                value="₹18.5M"
-                change="↑ 12% vs last month"
-                trend="up"
+                value={formatCurrency(dashboardData.monthlyTransactionVolume)}
+                change={`${dashboardData.monthlyGrowth > 0 ? '↑' : '↓'} ${Math.abs(dashboardData.monthlyGrowth).toFixed(1)}% vs last month`}
+                trend={dashboardData.monthlyGrowth > 0 ? 'up' : dashboardData.monthlyGrowth < 0 ? 'down' : 'neutral'}
                 color="teal"
-                subtext="Volume: 2,847 txns"
-              />
-            </div>
-            <div className="animate-slideUp" style={{ animationDelay: '0.6s' }}>
-              <StatCard
-                icon={<Activity size={28} />}
-                label="MoM Growth"
-                value="12.3%"
-                change="Accelerating (+2.1%)"
-                trend="up"
-                color="orange"
-                subtext="Above industry avg"
+                subtext={`Volume: ${formatNumber(dashboardData.totalTransactions)} total txns`}
               />
             </div>
             <div className="animate-slideUp" style={{ animationDelay: '0.7s' }}>
               <StatCard
+                icon={<Activity size={28} />}
+                label="Avg Daily Transaction"
+                value={formatCurrency(dashboardData.avgDailyTransaction)}
+                change="Per day average"
+                trend="neutral"
+                color="orange"
+                subtext="Last 30 days"
+              />
+            </div>
+            <div className="animate-slideUp" style={{ animationDelay: '0.8s' }}>
+              <StatCard
                 icon={<AlertCircle size={28} />}
                 label="Refund Rate"
-                value="4.2%"
-                change="↑ 0.5% (Monitor)"
-                trend="down"
+                value={`${dashboardData.refundRate.toFixed(1)}%`}
+                change={dashboardData.refundRate > 3 ? '↑ Above target' : '↓ Within target'}
+                trend={dashboardData.refundRate > 3 ? 'down' : 'up'}
                 color="orange"
-                subtext="Target: <3.5%"
+                subtext={dashboardData.refundRate > 3 ? 'Needs attention' : 'Good performance'}
               />
             </div>
           </div>
@@ -206,8 +349,8 @@ export default function DashboardPage() {
               </button>
               
               <button className="group flex flex-col items-center gap-2 bg-gradient-to-br from-[#FFF3ED] to-[#FFE5D5] p-4 rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105">
-                <CreditCard size={24} className="text-[#F15A22] group-hover:rotate-12 transition-transform" />
-                <span className="text-sm font-semibold text-[#1F2937]">Statement</span>
+                <Package size={24} className="text-[#F15A22] group-hover:rotate-12 transition-transform" />
+                <span className="text-sm font-semibold text-[#1F2937]">Products</span>
               </button>
               
               <button className="group flex flex-col items-center gap-2 bg-gradient-to-br from-[#E0F7F6] to-[#C7EEE8] p-4 rounded-xl hover:shadow-lg transition-all duration-300 hover:scale-105">
@@ -231,7 +374,7 @@ export default function DashboardPage() {
         </div>
 
         {/* AI Insights - Enhanced */}
-        <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-[#E5E7EB] p-6 shadow-xl hover:shadow-2xl transition-all duration-300 animate-slideUp" style={{ animationDelay: '0.8s' }}>
+        <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-[#E5E7EB] p-6 shadow-xl hover:shadow-2xl transition-all duration-300 animate-slideUp" style={{ animationDelay: '0.9s' }}>
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="text-[#1F2937] text-xl font-bold">AI Insights</h3>
@@ -241,12 +384,17 @@ export default function DashboardPage() {
               <TrendingUp size={20} className="text-white" />
             </div>
           </div>
-          <AIInsights />
+          <AIInsights 
+            monthlyGrowth={dashboardData.monthlyGrowth}
+            refundRate={dashboardData.refundRate}
+            creditScore={dashboardData.currentCreditScore}
+            estimatedLimit={dashboardData.estimatedMaxLimit}
+          />
         </div>
       </div>
 
       {/* Recent Activity - Enhanced */}
-      <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-[#E5E7EB] p-6 shadow-xl animate-fadeIn" style={{ animationDelay: '0.9s' }}>
+      <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-[#E5E7EB] p-6 shadow-xl animate-fadeIn" style={{ animationDelay: '1s' }}>
         <div className="flex items-center justify-between mb-6">
           <div>
             <h3 className="text-[#1F2937] text-xl font-bold">Recent Activity</h3>
@@ -259,29 +407,29 @@ export default function DashboardPage() {
         </div>
 
         <div className="space-y-3">
-          {[1, 2, 3, 4].map((item) => (
+          {dashboardData.scoreHistory.slice(0, 4).map((item, idx) => (
             <div 
-              key={item} 
+              key={idx} 
               className="group flex items-center justify-between p-4 rounded-xl hover:bg-gradient-to-r hover:from-[#FFF3ED] hover:to-[#E0F7F6] transition-all duration-300 cursor-pointer border border-transparent hover:border-[#F15A22]/20"
             >
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-gradient-to-br from-[#F3F4F6] to-[#E5E7EB] rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <DollarSign size={22} className="text-[#F15A22]" />
+                  <Activity size={22} className="text-[#F15A22]" />
                 </div>
                 <div>
                   <p className="font-semibold text-[#1F2937] group-hover:text-[#F15A22] transition-colors">
-                    Transaction #{1000 + item}
+                    Credit Score Update
                   </p>
                   <div className="flex items-center gap-2 text-sm">
-                    <span className="text-[#6B7280]">2 hours ago</span>
+                    <span className="text-[#6B7280]">{formatDate(item.date)}</span>
                     <span className="w-1 h-1 bg-[#6B7280] rounded-full"></span>
-                    <span className="text-[#10B981]">Completed</span>
+                    <span className="text-[#10B981]">Updated</span>
                   </div>
                 </div>
               </div>
               <div className="text-right">
-                <span className="text-[#1F2937] font-bold text-lg">₹{(5 - item).toFixed(1)}L</span>
-                <p className="text-[#6B7280] text-xs">+12% vs avg</p>
+                <span className="text-[#1F2937] font-bold text-lg">{item.score}</span>
+                <p className="text-[#6B7280] text-xs">points</p>
               </div>
             </div>
           ))}

@@ -1,62 +1,46 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area, AreaChart } from 'recharts';
 import { Activity } from 'lucide-react';
 
-const weekData = [
-  { name: 'Mon', score: 650, predicted: 652 },
-  { name: 'Tue', score: 655, predicted: 658 },
-  { name: 'Wed', score: 658, predicted: 663 },
-  { name: 'Thu', score: 660, predicted: 667 },
-  { name: 'Fri', score: 665, predicted: 670 },
-  { name: 'Sat', score: 668, predicted: 672 },
-  { name: 'Sun', score: 672, predicted: 675 },
-];
+interface CreditScoreChartProps {
+  data: Array<{
+    date: string;
+    score: number;
+  }>;
+}
 
-const monthData = [
-  { name: 'Week 1', score: 645, predicted: 650 },
-  { name: 'Week 2', score: 655, predicted: 662 },
-  { name: 'Week 3', score: 665, predicted: 670 },
-  { name: 'Week 4', score: 672, predicted: 678 },
-];
-
-const yearData = [
-  { name: 'Jan', score: 580, predicted: 585 },
-  { name: 'Feb', score: 595, predicted: 602 },
-  { name: 'Mar', score: 610, predicted: 618 },
-  { name: 'Apr', score: 625, predicted: 632 },
-  { name: 'May', score: 638, predicted: 645 },
-  { name: 'Jun', score: 650, predicted: 658 },
-  { name: 'Jul', score: 660, predicted: 668 },
-  { name: 'Aug', score: 668, predicted: 675 },
-  { name: 'Sep', score: 672, predicted: 680 },
-  { name: 'Oct', score: 675, predicted: 683 },
-  { name: 'Nov', score: 677, predicted: 685 },
-  { name: 'Dec', score: 680, predicted: 688 },
-];
-
-export default function CreditScoreChart() {
+export default function CreditScoreChart({ data }: CreditScoreChartProps) {
   const [filter, setFilter] = useState<'week' | 'month' | 'year'>('month');
   const [showPrediction, setShowPrediction] = useState(true);
+  const [chartData, setChartData] = useState<any[]>([]);
 
-  const getData = () => {
-    switch (filter) {
-      case 'week':
-        return weekData;
-      case 'month':
-        return monthData;
-      case 'year':
-        return yearData;
+  useEffect(() => {
+    // Process data based on filter
+    if (data && data.length > 0) {
+      const sorted = [...data].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      
+      // Format data for chart
+      const formatted = sorted.map((item) => ({
+        name: new Date(item.date).toLocaleDateString('en-US', { 
+          month: 'short', 
+          day: 'numeric' 
+        }),
+        score: item.score,
+        predicted: item.score + Math.floor(Math.random() * 5) + 2 // Simple prediction for demo
+      }));
+      
+      setChartData(formatted);
     }
-  };
+  }, [data, filter]);
 
   const getImprovement = () => {
-    const data = getData();
-    const first = data[0].score;
-    const last = data[data.length - 1].score;
-    const improvement = ((last - first) / first * 100).toFixed(1);
-    return improvement;
+    if (chartData.length < 2) return '0.0';
+    const first = chartData[0].score;
+    const last = chartData[chartData.length - 1].score;
+    return ((last - first) / first * 100).toFixed(1);
   };
 
   return (
@@ -105,86 +89,96 @@ export default function CreditScoreChart() {
         </div>
       </div>
 
-      <ResponsiveContainer width="100%" height={350}>
-        <AreaChart data={getData()} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-          <defs>
-            <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#F15A22" stopOpacity={0.3}/>
-              <stop offset="95%" stopColor="#F15A22" stopOpacity={0}/>
-            </linearGradient>
-            <linearGradient id="colorPrediction" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#2DAEAA" stopOpacity={0.2}/>
-              <stop offset="95%" stopColor="#2DAEAA" stopOpacity={0}/>
-            </linearGradient>
-          </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" opacity={0.5} />
-          <XAxis 
-            dataKey="name" 
-            stroke="#6B7280"
-            tick={{ fill: '#6B7280', fontSize: 12 }}
-          />
-          <YAxis 
-            stroke="#6B7280"
-            tick={{ fill: '#6B7280', fontSize: 12 }}
-            domain={[550, 700]}
-          />
-          <Tooltip
-            contentStyle={{
-              backgroundColor: '#FFFFFF',
-              border: '1px solid #E5E7EB',
-              borderRadius: '12px',
-              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-              padding: '8px 12px',
-            }}
-            labelStyle={{ color: '#1F2937', fontWeight: 'bold', marginBottom: '4px' }}
-          />
-          <Legend 
-            verticalAlign="top" 
-            height={36}
-            iconType="circle"
-            formatter={(value) => <span className="text-[#1F2937] font-medium">{value}</span>}
-          />
-          <Area
-            type="monotone"
-            dataKey="score"
-            stroke="#F15A22"
-            strokeWidth={3}
-            fill="url(#colorScore)"
-            dot={{ fill: '#F15A22', r: 6, strokeWidth: 2, stroke: '#fff' }}
-            activeDot={{ r: 8, stroke: '#F15A22', strokeWidth: 2 }}
-            name="Actual Score"
-          />
-          {showPrediction && (
+      {chartData.length > 0 ? (
+        <ResponsiveContainer width="100%" height={350}>
+          <AreaChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+            <defs>
+              <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#F15A22" stopOpacity={0.3}/>
+                <stop offset="95%" stopColor="#F15A22" stopOpacity={0}/>
+              </linearGradient>
+              <linearGradient id="colorPrediction" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#2DAEAA" stopOpacity={0.2}/>
+                <stop offset="95%" stopColor="#2DAEAA" stopOpacity={0}/>
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" opacity={0.5} />
+            <XAxis 
+              dataKey="name" 
+              stroke="#6B7280"
+              tick={{ fill: '#6B7280', fontSize: 12 }}
+            />
+            <YAxis 
+              stroke="#6B7280"
+              tick={{ fill: '#6B7280', fontSize: 12 }}
+              domain={[Math.min(...chartData.map(d => d.score)) - 10, Math.max(...chartData.map(d => d.score)) + 10]}
+            />
+            <Tooltip
+              contentStyle={{
+                backgroundColor: '#FFFFFF',
+                border: '1px solid #E5E7EB',
+                borderRadius: '12px',
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                padding: '8px 12px',
+              }}
+              labelStyle={{ color: '#1F2937', fontWeight: 'bold', marginBottom: '4px' }}
+            />
+            <Legend 
+              verticalAlign="top" 
+              height={36}
+              iconType="circle"
+              formatter={(value) => <span className="text-[#1F2937] font-medium">{value}</span>}
+            />
             <Area
               type="monotone"
-              dataKey="predicted"
-              stroke="#2DAEAA"
+              dataKey="score"
+              stroke="#F15A22"
               strokeWidth={3}
-              strokeDasharray="5 5"
-              fill="url(#colorPrediction)"
-              dot={{ fill: '#2DAEAA', r: 4 }}
-              activeDot={{ r: 6 }}
-              name="AI Prediction"
+              fill="url(#colorScore)"
+              dot={{ fill: '#F15A22', r: 6, strokeWidth: 2, stroke: '#fff' }}
+              activeDot={{ r: 8, stroke: '#F15A22', strokeWidth: 2 }}
+              name="Actual Score"
             />
-          )}
-        </AreaChart>
-      </ResponsiveContainer>
+            {showPrediction && (
+              <Area
+                type="monotone"
+                dataKey="predicted"
+                stroke="#2DAEAA"
+                strokeWidth={3}
+                strokeDasharray="5 5"
+                fill="url(#colorPrediction)"
+                dot={{ fill: '#2DAEAA', r: 4 }}
+                activeDot={{ r: 6 }}
+                name="AI Prediction"
+              />
+            )}
+          </AreaChart>
+        </ResponsiveContainer>
+      ) : (
+        <div className="h-[350px] flex items-center justify-center text-[#6B7280]">
+          No credit score data available
+        </div>
+      )}
 
       {/* Stats Footer */}
-      <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-[#E5E7EB]">
-        <div>
-          <p className="text-[#6B7280] text-xs mb-1">Current Score</p>
-          <p className="text-[#1F2937] font-bold text-xl">672</p>
+      {chartData.length > 0 && (
+        <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-[#E5E7EB]">
+          <div>
+            <p className="text-[#6B7280] text-xs mb-1">Current Score</p>
+            <p className="text-[#1F2937] font-bold text-xl">{chartData[chartData.length - 1]?.score || 0}</p>
+          </div>
+          <div>
+            <p className="text-[#6B7280] text-xs mb-1">Average Score</p>
+            <p className="text-[#1F2937] font-bold text-xl">
+              {Math.round(chartData.reduce((acc, curr) => acc + curr.score, 0) / chartData.length) || 0}
+            </p>
+          </div>
+          <div>
+            <p className="text-[#6B7280] text-xs mb-1">AI Confidence</p>
+            <p className="text-[#1F2937] font-bold text-xl">94%</p>
+          </div>
         </div>
-        <div>
-          <p className="text-[#6B7280] text-xs mb-1">Target (EoY)</p>
-          <p className="text-[#1F2937] font-bold text-xl">700</p>
-        </div>
-        <div>
-          <p className="text-[#6B7280] text-xs mb-1">AI Confidence</p>
-          <p className="text-[#1F2937] font-bold text-xl">94%</p>
-        </div>
-      </div>
+      )}
     </div>
   );
 }
