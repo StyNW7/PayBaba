@@ -239,7 +239,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Top Stats with Animation */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="animate-slideUp" style={{ animationDelay: '0.1s' }}>
           <StatCard
             icon={<CreditCard size={28} />}
@@ -262,7 +262,7 @@ export default function DashboardPage() {
             subtext="Based on transaction history"
           />
         </div>
-        <div className="animate-slideUp" style={{ animationDelay: '0.3s' }}>
+        {/* <div className="animate-slideUp" style={{ animationDelay: '0.3s' }}>
           <StatCard
             icon={<TrendingUp size={28} />}
             label="Est. Credit Limit"
@@ -272,7 +272,7 @@ export default function DashboardPage() {
             color="orange"
             subtext="Eligible for increase"
           />
-        </div>
+        </div> */}
       </div>
 
       {/* Credit Score Chart */}

@@ -113,11 +113,11 @@ export default function CreditScoreMeter({ score, maxScore, riskBand, readyForFu
           )}
           <span className="font-semibold">{riskBand}</span>
         </div>
-        <p className="text-xs mt-1 opacity-80">
+        {/* <p className="text-xs mt-1 opacity-80">
           {readyForFunding 
             ? '✓ Ready for funding up to ₹5.2L' 
             : '⚠ Need improvement for funding'}
-        </p>
+        </p> */}
       </div>
 
       {/* Score Interpretation */}

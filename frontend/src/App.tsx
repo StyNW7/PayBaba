@@ -45,6 +45,8 @@ import MonetizationDashboardPage from "./pages/PayBaba-Dashboard/monetization";
 import AIOpsDashboardPage from "./pages/PayBaba-Dashboard/ai-ops";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import CreateTransactionPage from "./pages/Merchant-Dashboard/create-transaction";
+import LoanApplicationsPage from "./pages/Bank-Dashboard/loans";
+import CreateLoanApplicationPage from "./pages/Bank-Dashboard/create-loan";
 
 function App() {
 
@@ -146,6 +148,19 @@ function App() {
                 <BankDashboardLayout children={<BankDashboardPage/>}/>
               </ProtectedRoute>
             } />
+
+            <Route path="/bank/dashboard/create-loan" element={
+              <ProtectedRoute>
+                <BankDashboardLayout children={<CreateLoanApplicationPage/>}/>
+              </ProtectedRoute>
+            } />
+
+            <Route path="/bank/dashboard/loans" element={
+              <ProtectedRoute>
+                <BankDashboardLayout children={<LoanApplicationsPage/>}/>
+              </ProtectedRoute>
+            } />
+
             <Route path="/bank/dashboard/simulation" element={
               <ProtectedRoute>
                 <BankDashboardLayout children={<LimitSimulatorPage/>}/>

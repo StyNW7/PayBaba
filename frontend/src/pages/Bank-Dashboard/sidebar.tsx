@@ -9,7 +9,9 @@ import {
   LogOut, 
   HelpCircle,
   ChevronRight,
-  FileText
+  FileText,
+  TrendingUp,
+  AppWindowIcon
 } from 'lucide-react';
 import { useLocation } from 'react-router';
 import { useNavigate } from 'react-router';
@@ -45,7 +47,8 @@ export default function Sidebar() {
 
   const menuItems = [
     { icon: LayoutDashboard, label: 'Portfolio', href: '/bank/dashboard', active: true },
-    // { icon: TrendingUp, label: 'Merchant Detail', href: '/bank/dashboard/merchant/:id' },
+    { icon: TrendingUp, label: 'Create Loan Application', href: '/bank/dashboard/create-loan' },
+    { icon: AppWindowIcon, label: 'Loan Applications', href: '/bank/dashboard/loans' },
     { icon: FileText, label: 'Limit Simulator', href: '/bank/dashboard/simulation' },
     { icon: Wallet, label: 'Early Warning System', href: '/bank/dashboard/warning-system' },
   ];

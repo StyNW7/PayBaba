@@ -5,9 +5,7 @@ import { useState, useEffect } from 'react';
 import { 
   Shield, 
   TrendingUp, 
-  CheckCircle, 
   Clock, 
-  ArrowUpRight,
   Target,
   ChevronRight,
   Download,
@@ -287,7 +285,7 @@ export default function CreditReadinessPage() {
       </div>
 
       {/* Status Banner - Show only if ready for funding */}
-      {creditData.score >= 70 && (
+      {/* {creditData.score >= 70 && (
         <div className="bg-gradient-to-r from-[#10B981]/10 to-[#2DAEAA]/10 border border-[#10B981]/20 rounded-2xl p-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-[#10B981] rounded-xl flex items-center justify-center">
@@ -305,7 +303,7 @@ export default function CreditReadinessPage() {
             <ArrowUpRight size={14} />
           </button>
         </div>
-      )}
+      )} */}
 
       {/* Section 1: Score Meter and Quick Stats */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

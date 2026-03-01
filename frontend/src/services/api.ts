@@ -482,6 +482,16 @@ export const bankApi = {
     return response.data;
   },
 
+  getLoanApplications: async (merchantId: string): Promise<ApiResponse<LoanApplicationsResponse>> => {
+    const response = await api.get<ApiResponse<LoanApplicationsResponse>>(`/bank/loan-applications/${merchantId}`);
+    return response.data;
+  },
+  
+  createLoanApplication: async (data: CreateLoanApplicationRequest): Promise<ApiResponse<CreateLoanApplicationResponse>> => {
+    const response = await api.post<ApiResponse<CreateLoanApplicationResponse>>(`/bank/loan-applications/${data.merchantId}`, data);
+    return response.data;
+  },
+
 };
 
 
@@ -528,6 +538,54 @@ export interface CreateTransactionResponse {
   expiredTime: string;
   productInfo: ProductInfoItem[];
 }
+
+
+
+// LOANS
+
+
+export interface LoanApplication {
+  applicationId: string;
+  bankId: string;
+  appliedAt: string;
+  amount: string;
+  recommendedAmount: string | null;
+  tenor: number;
+  status: 'Draft' | 'Submitted' | 'Under Review' | 'Approved' | 'Rejected' | 'Disbursed';
+  creditScoreAtApplication: number;
+  riskBandAtApplication: string;
+  purpose: string | null;
+  interestRate: string | null;
+  bankDecisionNotes: string | null;
+  bankDecisionDate: string | null;
+  disbursedAmount: string | null;
+  disbursedDate: string | null;
+}
+
+export interface LoanApplicationsResponse {
+  merchantId: string;
+  applications: LoanApplication[];
+}
+
+export interface CreateLoanApplicationRequest {
+  merchantId: string;
+  bankId: string;
+  amount: number;
+  tenor: number;
+  status: 'Draft';
+}
+
+export interface CreateLoanApplicationResponse {
+  applicationId: string;
+  merchantId: string;
+  bankId: string;
+  amount: string;
+  tenor: number;
+  status: string;
+  creditScoreAtApplication: number;
+  riskBandAtApplication: string;
+}
+
 
 
 export default api;
