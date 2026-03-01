@@ -1,7 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 
 import { useState } from 'react';
 import { ArrowLeft, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { authApi } from '@/services/api';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -31,11 +33,19 @@ export default function ForgotPasswordPage() {
 
     setIsSubmitting(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      setSubmitted(true);
+    try {
+      const response = await authApi.requestPasswordReset({ email });
+      
+      if (response.success) {
+        setSubmitted(true);
+      } else {
+        setError(response.message || 'Failed to send reset link');
+      }
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to send reset link. Please try again.');
+    } finally {
       setIsSubmitting(false);
-    }, 1500);
+    }
   };
 
   return (
@@ -78,6 +88,7 @@ export default function ForgotPasswordPage() {
                       ? 'border-red-500 bg-red-50 focus:border-red-500 focus:ring-2 focus:ring-red-200'
                       : 'border-gray-200 bg-white hover:border-gray-300 focus:border-[#F15A22] focus:ring-2 focus:ring-[#F15A22]/20'
                   }`}
+                  disabled={isSubmitting}
                 />
                 {error && (
                   <p className="mt-2 text-sm text-red-600 flex items-center gap-1">

@@ -1,8 +1,10 @@
 /* eslint-disable no-useless-escape */
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Eye, EyeOff, CheckCircle2, AlertCircle, ArrowLeft } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router';
 
 interface FormErrors {
   [key: string]: string;
@@ -23,8 +25,16 @@ export default function RegisterForm() {
   const [errors, setErrors] = useState<FormErrors>({});
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  
+  const { register, isLoading, error, clearError } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (error) {
+      setErrors(prev => ({ ...prev, general: error }));
+    }
+  }, [error]);
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
@@ -88,6 +98,14 @@ export default function RegisterForm() {
         [name]: '',
       }));
     }
+    // Clear general error
+    if (errors.general) {
+      setErrors(prev => ({
+        ...prev,
+        general: '',
+      }));
+      clearError();
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -97,27 +115,26 @@ export default function RegisterForm() {
       return;
     }
 
-    setIsSubmitting(true);
-    
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      await register({
+        email: formData.email,
+        password: formData.password,
+        companyName: formData.companyName,
+        fullName: formData.fullName,
+        city: formData.city,
+        address: formData.address,
+        phoneNumber: formData.phone,
+      });
+
       setSubmitSuccess(true);
-      setIsSubmitting(false);
-      // Reset form after 2 seconds
+      
+      // Redirect to login after successful registration
       setTimeout(() => {
-        setFormData({
-          email: '',
-          companyName: '',
-          fullName: '',
-          city: '',
-          address: '',
-          phone: '',
-          password: '',
-          confirmPassword: '',
-        });
-        setSubmitSuccess(false);
+        navigate('/auth/login');
       }, 2000);
-    }, 1500);
+    } catch {
+      // Error is already handled in auth context
+    }
   };
 
   const inputClasses = (fieldName: string) => `
@@ -154,7 +171,17 @@ export default function RegisterForm() {
             <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" />
             <div>
               <p className="font-semibold text-green-900">Registration successful!</p>
-              <p className="text-sm text-green-700">Welcome to PayBaba. Redirecting...</p>
+              <p className="text-sm text-green-700">Redirecting to login page...</p>
+            </div>
+          </div>
+        )}
+
+        {errors.general && (
+          <div className="mb-6 p-4 bg-red-50 border-2 border-red-500 rounded-lg flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="font-semibold text-red-900">Registration failed</p>
+              <p className="text-sm text-red-700">{errors.general}</p>
             </div>
           </div>
         )}
@@ -173,6 +200,7 @@ export default function RegisterForm() {
               onChange={handleChange}
               placeholder="you@company.com"
               className={inputClasses('email')}
+              disabled={isLoading || submitSuccess}
             />
             {errors.email && (
               <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
@@ -195,6 +223,7 @@ export default function RegisterForm() {
               onChange={handleChange}
               placeholder="Your Business Name"
               className={inputClasses('companyName')}
+              disabled={isLoading || submitSuccess}
             />
             {errors.companyName && (
               <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
@@ -217,6 +246,7 @@ export default function RegisterForm() {
               onChange={handleChange}
               placeholder="John Doe"
               className={inputClasses('fullName')}
+              disabled={isLoading || submitSuccess}
             />
             {errors.fullName && (
               <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
@@ -239,6 +269,7 @@ export default function RegisterForm() {
               onChange={handleChange}
               placeholder="Jakarta"
               className={inputClasses('city')}
+              disabled={isLoading || submitSuccess}
             />
             {errors.city && (
               <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
@@ -261,6 +292,7 @@ export default function RegisterForm() {
               onChange={handleChange}
               placeholder="Street address, building, etc."
               className={inputClasses('address')}
+              disabled={isLoading || submitSuccess}
             />
             {errors.address && (
               <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
@@ -283,6 +315,7 @@ export default function RegisterForm() {
               onChange={handleChange}
               placeholder="+62 812 3456 7890"
               className={inputClasses('phone')}
+              disabled={isLoading || submitSuccess}
             />
             {errors.phone && (
               <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
@@ -306,11 +339,13 @@ export default function RegisterForm() {
                 onChange={handleChange}
                 placeholder="At least 8 characters"
                 className={inputClasses('password')}
+                disabled={isLoading || submitSuccess}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
+                disabled={isLoading || submitSuccess}
               >
                 {showPassword ? (
                   <EyeOff className="w-5 h-5" />
@@ -344,11 +379,13 @@ export default function RegisterForm() {
                 onChange={handleChange}
                 placeholder="Confirm your password"
                 className={inputClasses('confirmPassword')}
+                disabled={isLoading || submitSuccess}
               />
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
+                disabled={isLoading || submitSuccess}
               >
                 {showConfirmPassword ? (
                   <EyeOff className="w-5 h-5" />
@@ -369,10 +406,10 @@ export default function RegisterForm() {
         {/* Submit Button */}
         <button
           type="submit"
-          disabled={isSubmitting || submitSuccess}
+          disabled={isLoading || submitSuccess}
           className="w-full bg-[#F15A22] hover:bg-[#D64919] disabled:bg-gray-300 text-white font-semibold py-3 rounded-lg transition-all duration-300 mt-6 mb-4 flex items-center justify-center gap-2"
         >
-          {isSubmitting ? (
+          {isLoading ? (
             <>
               <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
               Creating Account...

@@ -1,0 +1,154 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios';
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+export interface ApiResponse<T> {
+  success: boolean;
+  message: string;
+  data: T;
+}
+
+export interface RegisterRequest {
+  email: string;
+  password: string;
+  companyName: string;
+  fullName: string;
+  city: string;
+  address: string;
+  phoneNumber: string;
+}
+
+export interface RegisterResponse {
+  userId: string;
+  merchantId: string;
+  email: string;
+}
+
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface LoginResponse {
+  accessToken: string;
+  refreshToken: string;
+}
+
+export interface RefreshTokenRequest {
+  refreshToken: string;
+}
+
+export interface RefreshTokenResponse {
+  accessToken: string;
+}
+
+export interface RequestPasswordResetRequest {
+  email: string;
+}
+
+export interface RequestPasswordResetResponse {
+  message: string;
+}
+
+export interface ResetPasswordRequest {
+  resetToken: string;
+  newPassword: string;
+}
+
+export interface ResetPasswordResponse {
+  message: string;
+}
+
+// Create axios instance
+const api = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Request interceptor to add auth token
+api.interceptors.request.use(
+  (config: InternalAxiosRequestConfig) => {
+    const token = localStorage.getItem('accessToken');
+    if (token && config.headers) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error: any) => {
+    return Promise.reject(error);
+  }
+);
+
+// Response interceptor to handle token refresh
+api.interceptors.response.use(
+  (response) => response,
+  async (error: AxiosError) => {
+    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+    
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+      
+      try {
+        const refreshToken = localStorage.getItem('refreshToken');
+        if (!refreshToken) {
+          throw new Error('No refresh token');
+        }
+        
+        const response = await axios.post<ApiResponse<RefreshTokenResponse>>(
+          `${API_BASE_URL}/auth/refresh`,
+          { refreshToken }
+        );
+        
+        const { accessToken } = response.data.data;
+        localStorage.setItem('accessToken', accessToken);
+        
+        if (originalRequest.headers) {
+          originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+        }
+        
+        return api(originalRequest);
+      } catch (refreshError) {
+        // Refresh failed, redirect to login
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        window.location.href = '/auth/login';
+        return Promise.reject(refreshError);
+      }
+    }
+    
+    return Promise.reject(error);
+  }
+);
+
+// Auth API functions
+export const authApi = {
+  register: async (data: RegisterRequest): Promise<ApiResponse<RegisterResponse>> => {
+    const response = await api.post<ApiResponse<RegisterResponse>>('/auth/register', data);
+    return response.data;
+  },
+  
+  login: async (data: LoginRequest): Promise<ApiResponse<LoginResponse>> => {
+    const response = await api.post<ApiResponse<LoginResponse>>('/auth/login', data);
+    return response.data;
+  },
+  
+  refreshToken: async (data: RefreshTokenRequest): Promise<ApiResponse<RefreshTokenResponse>> => {
+    const response = await api.post<ApiResponse<RefreshTokenResponse>>('/auth/refresh', data);
+    return response.data;
+  },
+  
+  requestPasswordReset: async (data: RequestPasswordResetRequest): Promise<ApiResponse<RequestPasswordResetResponse>> => {
+    const response = await api.post<ApiResponse<RequestPasswordResetResponse>>('/auth/request-password-reset', data);
+    return response.data;
+  },
+  
+  resetPassword: async (data: ResetPasswordRequest): Promise<ApiResponse<ResetPasswordResponse>> => {
+    const response = await api.post<ApiResponse<ResetPasswordResponse>>('/auth/reset-password', data);
+    return response.data;
+  },
+};
+
+export default api;

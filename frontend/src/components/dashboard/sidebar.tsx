@@ -18,9 +18,11 @@ import {
 } from 'lucide-react';
 import { useLocation } from 'react-router';
 import { useNavigate } from 'react-router';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function Sidebar() {
 
+  const {logout} = useAuth();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
@@ -42,6 +44,7 @@ export default function Sidebar() {
   }, []);
 
   const handleLogout = () => {
+    logout()
     navigate("/")
   }
 
