@@ -230,7 +230,7 @@ export default function SmartLoanPage() {
               <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
                 <Calendar size={20} className="text-white" />
               </div>
-              <span className="text-white/80 text-sm font-medium">Best Time to Apply for Loan</span>
+              <span className="text-white/80 text-sm font-medium">Optimal Timing for Financing Consideration</span>
             </div>
             
             <h2 className="text-3xl lg:text-4xl font-bold mb-3">
@@ -243,8 +243,9 @@ export default function SmartLoanPage() {
             </div>
 
             <div className="flex items-center gap-3 mb-6">
-              <div className="bg-white/20 backdrop-blur-sm rounded-xl px-4 py-2">
-                <p className="text-sm text-white/80">Estimated Limit</p>
+              <div className="bg-white/20 backdrop-blur-sm rounded-xl px-5 py-3">
+                <p className="text-sm text-white/80">Cashflow Strength Range</p>
+                <p className="text-xs text-white/80 mb-2">(Derived from historical transaction stability)</p>
                 <p className="text-2xl font-bold">
                   Rp 65-85 Million
                 </p>
@@ -252,7 +253,7 @@ export default function SmartLoanPage() {
               
               <div className="bg-[#FCD34D] text-[#1F2937] px-4 py-2 rounded-xl flex items-center gap-2 font-semibold">
                 <CheckCircle size={18} />
-                {loanData.confidence >= 80 ? 'High Recommendation' : 'Recommended'}
+                {loanData.confidence >= 80 ? 'High Timing Confidence' : 'Confidence'}
               </div>
             </div>
 

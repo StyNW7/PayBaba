@@ -6,7 +6,6 @@ import {
   X, 
   LayoutDashboard, 
   TrendingUp, 
-  Wallet, 
   LogOut, 
   HelpCircle,
   ChevronRight
@@ -43,7 +42,6 @@ export default function Sidebar() {
   const menuItems = [
     { icon: LayoutDashboard, label: 'Monetization Dashboard', href: '/paybaba/dashboard', active: true },
     { icon: TrendingUp, label: 'AI OPS System', href: '/paybaba/dashboard/ai' },
-    { icon: Wallet, label: 'Early Warning System', href: '/bank/dashboard/warning-system' },
   ];
 
   return (
