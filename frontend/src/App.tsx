@@ -31,7 +31,7 @@ import TeamPage from "./pages/Merchant-Dashboard/team-page";
 import NotificationsPage from "./pages/Merchant-Dashboard/notifications";
 import TransactionsPage from "./pages/Merchant-Dashboard/transaction";
 import SmartLoanPage from "./pages/Merchant-Dashboard/time-loan";
-import LimitSimulatorPage from "./pages/Merchant-Dashboard/simulator";
+import LimitSimulatorPage from "./pages/Bank-Dashboard/simulator";
 import SettingsPage from "./pages/Merchant-Dashboard/settings";
 import HelpPage from "./pages/Merchant-Dashboard/help";
 import BankDashboardPage from "./pages/Bank-Dashboard/overview";
@@ -43,6 +43,7 @@ import EarlyWarningPage from "./pages/Bank-Dashboard/early-warning-system";
 import PayBabaDashboardLayout from "./pages/PayBaba-Dashboard/layout";
 import MonetizationDashboardPage from "./pages/PayBaba-Dashboard/monetization";
 import AIOpsDashboardPage from "./pages/PayBaba-Dashboard/ai-ops";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 
 function App() {
 
@@ -83,24 +84,59 @@ function App() {
 
             {/* Merchant Dashboard */}
 
-            <Route path="/merchant/dashboard" element={<DashboardLayout children={<DashboardPage/>}/>} />
-            <Route path="/merchant/dashboard/credit" element={<DashboardLayout children={<CreditReadinessPage/>}/>} />
-            <Route path="/merchant/dashboard/transactions" element={<DashboardLayout children={<TransactionsPage/>}/>} />
+            <Route path="/merchant/dashboard" element={
+              <ProtectedRoute>
+                <DashboardLayout children={<DashboardPage/>}/>
+              </ProtectedRoute>
+            } />
 
-            <Route path="/merchant/dashboard/analytics" element={<DashboardLayout children={<SmartLoanPage/>}/>} />
-            <Route path="/merchant/dashboard/simulator" element={<DashboardLayout children={<LimitSimulatorPage/>}/>} />
+            <Route path="/merchant/dashboard/credit" element={
+              <ProtectedRoute>
+                <DashboardLayout children={<CreditReadinessPage/>}/>
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/merchant/dashboard/transactions" element={
+              <ProtectedRoute>
+                <DashboardLayout children={<TransactionsPage/>}/>
+              </ProtectedRoute>
+            } />
 
-            <Route path="/merchant/dashboard/settings" element={<DashboardLayout children={<SettingsPage/>}/>} />
-            <Route path="/merchant/dashboard/help" element={<DashboardLayout children={<HelpPage/>}/>} />
+            <Route path="/merchant/dashboard/analytics" element={
+              <ProtectedRoute>
+                <DashboardLayout children={<SmartLoanPage/>}/>
+              </ProtectedRoute>
+            } />
 
-            <Route path="/merchant/dashboard/team" element={<DashboardLayout children={<TeamPage/>}/>} />
-            <Route path="/merchant/dashboard/notifications" element={<DashboardLayout children={<NotificationsPage/>}/>} />
+            <Route path="/merchant/dashboard/settings" element={
+              <ProtectedRoute>
+                <DashboardLayout children={<SettingsPage/>}/>
+              </ProtectedRoute>
+            } />
+
+            <Route path="/merchant/dashboard/help" element={
+              <ProtectedRoute>
+                <DashboardLayout children={<HelpPage/>}/>
+              </ProtectedRoute>
+            } />
+
+            <Route path="/merchant/dashboard/team" element={
+              <ProtectedRoute>
+                <DashboardLayout children={<TeamPage/>}/>
+              </ProtectedRoute>
+            } />
+
+            <Route path="/merchant/dashboard/notifications" element={
+              <ProtectedRoute>
+                <DashboardLayout children={<NotificationsPage/>}/>
+              </ProtectedRoute>
+            } />
 
             {/* Bank Dashboard */}
 
             <Route path="/bank/dashboard" element={<BankDashboardLayout children={<BankDashboardPage/>}/>} />
+            <Route path="/bank/dashboard/simulation" element={<BankDashboardLayout children={<LimitSimulatorPage/>}/>} />
 
-            {/* Ini harus disesuaikan lagi */}
             <Route path="/bank/dashboard/merchant/:id" element={<BankDashboardLayout children={<MerchantDetailPage/>}/>} />
 
             <Route path="/bank/dashboard/warning-system" element={<BankDashboardLayout children={<EarlyWarningPage/>}/>} />

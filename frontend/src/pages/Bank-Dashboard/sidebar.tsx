@@ -9,13 +9,16 @@ import {
   Wallet, 
   LogOut, 
   HelpCircle,
-  ChevronRight
+  ChevronRight,
+  FileText
 } from 'lucide-react';
 import { useLocation } from 'react-router';
 import { useNavigate } from 'react-router';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function Sidebar() {
 
+  const {logout} = useAuth();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
@@ -37,12 +40,14 @@ export default function Sidebar() {
   }, []);
 
   const handleLogout = () => {
+    logout()
     navigate("/")
   }
 
   const menuItems = [
     { icon: LayoutDashboard, label: 'Portfolio', href: '/bank/dashboard', active: true },
     { icon: TrendingUp, label: 'Merchant Detail', href: '/bank/dashboard/merchant/:id' },
+    { icon: FileText, label: 'Limit Simulator', href: '/bank/dashboard/simulation' },
     { icon: Wallet, label: 'Early Warning System', href: '/bank/dashboard/warning-system' },
   ];
 
