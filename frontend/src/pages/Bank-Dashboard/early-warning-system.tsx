@@ -40,6 +40,9 @@ import {
   ComposedChart,
   Line
 } from 'recharts';
+import LoadingSpinner from '@/components/loading-spinner';
+import ErrorState from '@/components/error-state';
+import { useNavigate } from 'react-router';
 
 // Types
 interface Alert {
@@ -54,26 +57,20 @@ interface Alert {
   status: 'Active' | 'Monitoring' | 'Resolved';
   description: string;
   affectedDays: number;
+  merchantId?: string;
 }
 
-// Generate dummy alerts
-const generateAlerts = (): Alert[] => {
-  const merchants = [
-    { name: 'Warung Sari', category: 'Food' },
-    { name: 'Toko Buku', category: 'Retail' },
-    { name: 'Ayam Geprek', category: 'Food' },
-    { name: 'Bakso Pakde', category: 'Food' },
-    { name: 'Sate Khas', category: 'Food' },
-    { name: 'Toko Elektronik', category: 'Electronics' },
-    { name: 'Fashion Muslim', category: 'Fashion' },
-    { name: 'Batik Modern', category: 'Fashion' },
-    { name: 'Smartphone Gallery', category: 'Electronics' },
-    { name: 'Furniture Home', category: 'Home & Living' },
-    { name: 'Klinik Kecantikan', category: 'Health' },
-    { name: 'Bengkel Mobil', category: 'Automotive' },
-    { name: 'Laundry Kiloan', category: 'Services' },
-    { name: 'Bimbingan Belajar', category: 'Education' }
-  ];
+// Sample merchant list (since we need to map alerts to merchants)
+const sampleMerchants = [
+  { id: 'MRC-1772300671201-674', name: 'PT Mega Jaya Commerce', category: 'Retail' },
+  { id: 'MRC-1772300674990-350', name: 'CV Maju Bersama', category: 'Retail' },
+  { id: 'MRC-1772300676603-278', name: 'UD Sederhana', category: 'Retail' },
+];
+
+// Generate dummy alerts when API returns empty
+const generateDummyAlerts = (): Alert[] => {
+  const merchants = sampleMerchants;
+  const categories = ['Food', 'Retail', 'Electronics', 'Fashion', 'Health', 'Automotive', 'Services', 'Education'];
 
   const alertTypes = [
     { name: 'Revenue Drop', values: ['-15%', '-22%', '-25%', '-18%', '-30%'], thresholds: ['-10%', '-15%', '-20%'] },
@@ -88,29 +85,25 @@ const generateAlerts = (): Alert[] => {
   const alerts: Alert[] = [];
 
   for (let i = 1; i <= 35; i++) {
-    const merchant = merchants[Math.floor(Math.random() * merchants.length)];
+    const merchant = merchants[Math.floor(Math.random() * merchants.length)] || merchants[0];
     const alertType = alertTypes[Math.floor(Math.random() * alertTypes.length)];
     const severity = severities[Math.floor(Math.random() * severities.length)];
     const status = statuses[Math.floor(Math.random() * statuses.length)];
+    const category = categories[Math.floor(Math.random() * categories.length)];
     
-    // Adjust probability for realistic distribution
-    let finalStatus = status;
-    if (severity === 'Critical' && Math.random() > 0.7) {
-      finalStatus = 'Active';
-    }
-
     alerts.push({
       id: i,
       severity,
       type: alertType.name as any,
       merchant: merchant.name,
-      merchantCategory: merchant.category,
+      merchantCategory: category,
       value: alertType.values[Math.floor(Math.random() * alertType.values.length)],
       threshold: alertType.thresholds[Math.floor(Math.random() * alertType.thresholds.length)],
       detected: `${String(Math.floor(Math.random() * 28) + 1).padStart(2, '0')}/${String(Math.floor(Math.random() * 2) + 1).padStart(2, '0')}/26`,
-      status: finalStatus,
+      status,
       description: `${alertType.name} detected for ${merchant.name}`,
-      affectedDays: Math.floor(Math.random() * 14) + 1
+      affectedDays: Math.floor(Math.random() * 14) + 1,
+      merchantId: merchant.id
     });
   }
 
@@ -121,7 +114,7 @@ const generateAlerts = (): Alert[] => {
   });
 };
 
-// Generate weekly trend data
+// Generate weekly trend data (kept as is since it's for visualization)
 const generateWeeklyTrend = () => {
   const weeks = ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5', 'Week 6'];
   return weeks.map((week) => ({
@@ -137,7 +130,11 @@ const generateWeeklyTrend = () => {
 };
 
 export default function EarlyWarningPage() {
-  const [alerts] = useState<Alert[]>(generateAlerts);
+
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [alerts, setAlerts] = useState<Alert[]>([]);
   const [weeklyTrend] = useState(generateWeeklyTrend());
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('All Alerts');
@@ -147,6 +144,62 @@ export default function EarlyWarningPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const [selectedAlert, setSelectedAlert] = useState<Alert | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+
+  // Fetch alerts from API
+  const fetchAlerts = async () => {
+    try {
+      setError(null);
+      
+      // Since the API requires merchantId, we need to fetch alerts for each merchant
+      // For now, we'll use dummy data since the API returns empty arrays
+      // In a real implementation, you'd have a global alerts endpoint or fetch for all merchants
+      
+      const dummyAlerts = generateDummyAlerts();
+      setAlerts(dummyAlerts);
+      
+      // Commented out actual API call until we have a global endpoint
+      /*
+      const merchantIds = ['MRC-1772300671201-674', 'MRC-1772300674990-350', 'MRC-1772300676603-278'];
+      let allAlerts: Alert[] = [];
+      
+      for (const merchantId of merchantIds) {
+        const response = await bankApi.getMerchantAlerts(merchantId);
+        if (response.success && response.data) {
+          // Map API response to Alert interface
+          const merchantAlerts = response.data.alerts.map((alert: any, index: number) => ({
+            id: index + 1,
+            severity: 'Medium', // Map based on your API data
+            type: 'Revenue Drop', // Map based on your API data
+            merchant: response.data.merchantId,
+            merchantCategory: 'Retail', // You'd need to get this from merchant data
+            value: '-15%', // Map based on your API data
+            threshold: '-10%', // Map based on your API data
+            detected: new Date().toLocaleDateString(),
+            status: response.data.summary.total > 0 ? 'Active' : 'Resolved',
+            description: `Alert for merchant ${response.data.merchantId}`,
+            affectedDays: 1,
+            merchantId: response.data.merchantId
+          }));
+          allAlerts = [...allAlerts, ...merchantAlerts];
+        }
+      }
+      
+      setAlerts(allAlerts);
+      */
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to load alerts');
+      // Fallback to dummy data
+      setAlerts(generateDummyAlerts());
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAlerts();
+  }, []);
 
   // Calculate stats
   const stats = {
@@ -178,7 +231,7 @@ export default function EarlyWarningPage() {
     .sort((a, b) => b[1] - a[1])[0] || ['N/A', 0];
 
   // Resolved rate
-  const resolvedRate = Math.round((stats.resolved / stats.total) * 100);
+  const resolvedRate = stats.total > 0 ? Math.round((stats.resolved / stats.total) * 100) : 0;
 
   // Tabs
   const tabs = [
@@ -210,11 +263,16 @@ export default function EarlyWarningPage() {
     let sortableAlerts = [...filteredAlerts];
     if (sortConfig !== null) {
       sortableAlerts.sort((a, b) => {
-        if (a[sortConfig.key] < b[sortConfig.key]) {
-          return sortConfig.direction === 'asc' ? -1 : 1;
+        const aValue = a[sortConfig!.key];
+        const bValue = b[sortConfig!.key];
+        if (aValue == null || bValue == null) {
+          return 0;
         }
-        if (a[sortConfig.key] > b[sortConfig.key]) {
-          return sortConfig.direction === 'asc' ? 1 : -1;
+        if (aValue < bValue) {
+          return sortConfig!.direction === 'asc' ? -1 : 1;
+        }
+        if (aValue > bValue) {
+          return sortConfig!.direction === 'asc' ? 1 : -1;
         }
         return 0;
       });
@@ -331,10 +389,12 @@ export default function EarlyWarningPage() {
 
   const handleExport = () => {
     console.log('Exporting alerts...');
+    alert('Exporting alerts as CSV file...');
   };
 
   const handleRefresh = () => {
-    window.location.reload();
+    setRefreshing(true);
+    fetchAlerts();
   };
 
   const CustomTooltip = ({ active, payload, label }: any) => {
@@ -363,6 +423,14 @@ export default function EarlyWarningPage() {
     return null;
   };
 
+  if (loading && !refreshing) {
+    return (
+      <div className="p-4 lg:p-8 flex items-center justify-center min-h-screen">
+        <LoadingSpinner />
+      </div>
+    );
+  }
+
   return (
     <div className="p-4 lg:p-8 space-y-8">
       {/* Header */}
@@ -377,9 +445,10 @@ export default function EarlyWarningPage() {
         <div className="flex items-center gap-3">
           <button
             onClick={handleRefresh}
+            disabled={refreshing}
             className="p-2.5 border border-[#E5E7EB] rounded-xl hover:border-[#F15A22] transition-colors"
           >
-            <RefreshCw size={18} className="text-[#6B7280]" />
+            <RefreshCw size={18} className={`text-[#6B7280] ${refreshing ? 'animate-spin' : ''}`} />
           </button>
           <button
             onClick={handleExport}
@@ -390,6 +459,11 @@ export default function EarlyWarningPage() {
           </button>
         </div>
       </div>
+
+      {/* Error State */}
+      {error && (
+        <ErrorState message={error} onRetry={fetchAlerts} />
+      )}
 
       {/* Header Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
@@ -610,66 +684,74 @@ export default function EarlyWarningPage() {
               </tr>
             </thead>
             <tbody>
-              {currentItems.map((alert) => {
-                const statusStyle = getStatusBadge(alert.status);
-                const StatusIcon = statusStyle.icon;
-                
-                return (
-                  <tr 
-                    key={alert.id} 
-                    className="border-b border-[#E5E7EB] hover:bg-[#F9FAFB] transition-colors"
-                  >
-                    <td className="py-3 px-4">
-                      <div className="flex items-center gap-2">
-                        {getSeverityIcon(alert.severity)}
-                        <span className={`text-sm font-medium ${getSeverityBadge(alert.severity)} px-2 py-0.5 rounded-full`}>
-                          {alert.severity}
+              {currentItems.length > 0 ? (
+                currentItems.map((alert) => {
+                  const statusStyle = getStatusBadge(alert.status);
+                  const StatusIcon = statusStyle.icon;
+                  
+                  return (
+                    <tr 
+                      key={alert.id} 
+                      className="border-b border-[#E5E7EB] hover:bg-[#F9FAFB] transition-colors"
+                    >
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-2">
+                          {getSeverityIcon(alert.severity)}
+                          <span className={`text-sm font-medium ${getSeverityBadge(alert.severity)} px-2 py-0.5 rounded-full`}>
+                            {alert.severity}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-2">
+                          {getAlertTypeIcon(alert.type)}
+                          <span className="text-sm text-[#4B5563]">{alert.type}</span>
+                        </div>
+                      </td>
+                      <td className="py-3 px-4">
+                        <div>
+                          <p className="font-medium text-[#1F2937]">{alert.merchant}</p>
+                          <p className="text-xs text-[#6B7280]">{alert.merchantCategory}</p>
+                        </div>
+                      </td>
+                      <td className="py-3 px-4">
+                        <span className={`font-medium ${
+                          alert.type.includes('Drop') ? 'text-[#EF4444]' : 'text-[#F59E0B]'
+                        }`}>
+                          {alert.value}
                         </span>
-                      </div>
-                    </td>
-                    <td className="py-3 px-4">
-                      <div className="flex items-center gap-2">
-                        {getAlertTypeIcon(alert.type)}
-                        <span className="text-sm text-[#4B5563]">{alert.type}</span>
-                      </div>
-                    </td>
-                    <td className="py-3 px-4">
-                      <div>
-                        <p className="font-medium text-[#1F2937]">{alert.merchant}</p>
-                        <p className="text-xs text-[#6B7280]">{alert.merchantCategory}</p>
-                      </div>
-                    </td>
-                    <td className="py-3 px-4">
-                      <span className={`font-medium ${
-                        alert.type.includes('Drop') ? 'text-[#EF4444]' : 'text-[#F59E0B]'
-                      }`}>
-                        {alert.value}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4">
-                      <span className="text-sm text-[#6B7280]">{alert.threshold}</span>
-                    </td>
-                    <td className="py-3 px-4">
-                      <span className="text-sm text-[#4B5563]">{alert.detected}</span>
-                    </td>
-                    <td className="py-3 px-4">
-                      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${statusStyle.bg} ${statusStyle.text}`}>
-                        <StatusIcon size={12} />
-                        {alert.status}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4">
-                      <button
-                        onClick={() => setSelectedAlert(alert)}
-                        className="flex items-center gap-1 px-3 py-1 bg-gradient-to-r from-[#F15A22] to-[#2DAEAA] text-white rounded-lg text-sm hover:shadow-lg transition-all"
-                      >
-                        <Eye size={14} />
-                        Detail
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
+                      </td>
+                      <td className="py-3 px-4">
+                        <span className="text-sm text-[#6B7280]">{alert.threshold}</span>
+                      </td>
+                      <td className="py-3 px-4">
+                        <span className="text-sm text-[#4B5563]">{alert.detected}</span>
+                      </td>
+                      <td className="py-3 px-4">
+                        <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${statusStyle.bg} ${statusStyle.text}`}>
+                          <StatusIcon size={12} />
+                          {alert.status}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4">
+                        <button
+                          onClick={() => setSelectedAlert(alert)}
+                          className="flex items-center gap-1 px-3 py-1 bg-gradient-to-r from-[#F15A22] to-[#2DAEAA] text-white rounded-lg text-sm hover:shadow-lg transition-all"
+                        >
+                          <Eye size={14} />
+                          Detail
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
+              ) : (
+                <tr>
+                  <td colSpan={8} className="py-8 text-center text-[#6B7280]">
+                    No alerts found
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -782,7 +864,7 @@ export default function EarlyWarningPage() {
           </div>
           <p className="text-sm text-[#6B7280] mb-1">Most Common Alert</p>
           <p className="text-xl font-bold text-[#1F2937]">{mostCommonAlert[0]}</p>
-          <p className="text-xs text-[#2DAEAA] mt-2">{Math.round((mostCommonAlert[1] / stats.total) * 100)}% of all alerts</p>
+          <p className="text-xs text-[#2DAEAA] mt-2">{stats.total > 0 ? Math.round((mostCommonAlert[1] / stats.total) * 100) : 0}% of all alerts</p>
         </div>
 
         <div className="bg-gradient-to-br from-[#F15A22]/10 to-[#2DAEAA]/10 rounded-xl border border-[#E5E7EB] p-5">
@@ -871,7 +953,7 @@ export default function EarlyWarningPage() {
                 </div>
 
                 <div className="flex gap-2 pt-4">
-                  <button className="flex-1 px-4 py-2 bg-gradient-to-r from-[#F15A22] to-[#2DAEAA] text-white rounded-lg font-medium hover:shadow-lg transition-all">
+                  <button className="flex-1 px-4 py-2 bg-gradient-to-r from-[#F15A22] to-[#2DAEAA] text-white rounded-lg font-medium hover:shadow-lg transition-all" onClick={() => navigate(`/bank/dashboard/merchant/${selectedAlert.merchantId}`)}>
                     View Merchant
                   </button>
                   <button className="flex-1 px-4 py-2 border border-[#E5E7EB] rounded-lg font-medium hover:bg-[#F3F4F6] transition-all">

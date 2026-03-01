@@ -462,8 +462,36 @@ export const bankApi = {
     const response = await api.get<ApiResponse<MerchantDetail>>(`/bank/merchants/${merchantId}`);
     return response.data;
   },
+
+  getMerchantAlerts: async (merchantId: string, resolved?: 'true' | 'false'): Promise<ApiResponse<MerchantAlert>> => {
+    const response = await api.get<ApiResponse<MerchantAlert>>(`/bank/alerts/${merchantId}`, {
+      params: { resolved }
+    });
+    return response.data;
+  },
+  
+  getAllAlerts: async (): Promise<ApiResponse<MerchantAlert[]>> => {
+    // This is a placeholder - adjust based on your actual API
+    const response = await api.get<ApiResponse<MerchantAlert[]>>('/bank/alerts');
+    return response.data;
+  },
+
 };
 
+
+// EARLY WARNING SYSTEM
+export interface AlertSummary {
+  total: number;
+  critical: number;
+  medium: number;
+  low: number;
+}
+
+export interface MerchantAlert {
+  merchantId: string;
+  summary: AlertSummary;
+  alerts: any[]; // The alerts array from your API (empty in your example)
+}
 
 
 export default api;
