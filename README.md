@@ -8,7 +8,7 @@
     </div>
 </div>
 <br>
-<h1 align="center">Mini Hackathon Paylabs x Alibaba x BINUS University
+<h1 align="center">1st of Mini Hackathon Paylabs x Alibaba x BINUS University
 <br>
 Culminating Event</h1>
 <div align="center">
