@@ -8,7 +8,7 @@
     </div>
 </div>
 <br>
-<h1 align="center">1st of Mini Hackathon Paylabs x Alibaba x BINUS University
+<h1 align="center">DIGDAYA x HACKATHON 2026
 </h1>
 <div align="center">
 
@@ -22,7 +22,7 @@ PayBaba is a transaction intelligence-based dashboard that utilizes transaction 
 PayBaba is not designed as a lending system, but rather as a decision-support system that assists financial institutions in conducting additional analysis of MSME business feasibility. This system processes digital transaction data, such as sales volume, transaction frequency, cash flow stability, and business growth trends, into quantitative metrics that can be used as supporting evidence in the credit evaluation process. This way, real economic data previously scattered throughout daily transaction activity can be transformed into more structured and easily understood information.
 
 Pitch Deck: 
-[https://bit.ly/PayBaba-PitchDeck ](https://bit.ly/PayBaba-PitchDeck )
+[https://bit.ly/PayBaba-Pitch-Deck ](https://bit.ly/PayBaba-Pitch-Deck )
 
 --- 
 
@@ -89,8 +89,8 @@ GitHub for Backend: https://github.com/lutfialvarop/PayBaba-API
 
 ### Clone the Project
 ```bash
-git clone https://github.com/StyNW7/PayBaba-AI-Hackathon.git
-cd PayBaba-AI-Hackathon
+git clone https://github.com/StyNW7/PayBaba.git
+cd PayBaba
 cd frontend
 npm install
 npm run dev
@@ -184,7 +184,7 @@ This diagram illustrates the System Architecture of PayBaba
 
 ## 👥 Owner
 
-This Repository is created by MU Sang King Team for Mini AI Hackthon by PayLabs x Alibaba Cloud Indonesia x BINUS University:
+This Repository is created by MU Sang King Team from BINUS University:
 <ul>
 <li>Stanley Nathanael Wijaya - 2702217125</li>
 <li>Maulana Hanif Al Faqih Rojichan - 2802487844</li>
